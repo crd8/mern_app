@@ -1,24 +1,37 @@
-import logo from './logo.svg';
-import './App.css';
+import React from "react";
+import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
+import { Container, Nav, Navbar } from 'react-bootstrap';
+import DepartmentPage from './pages/DepartmentPage';
+import Dashboard from './pages/DashboardPage';
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edita <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <Router>
+      <div>
+        {/* Navigasi */}
+        <Navbar bg="light" expand="md">
+          <Container>
+            <Navbar.Brand as={Link} to="/">My App</Navbar.Brand>
+            <Navbar.Toggle aria-controls="basic-navbar-nav" />
+            <Navbar.Collapse id="basic-navbar-nav">
+              <Nav className="mr-auto">
+                <Nav.Link as={Link} to="/dashboard">Dashboard</Nav.Link>
+                <Nav.Link as={Link} to="/departments">Departments</Nav.Link>
+              </Nav>
+            </Navbar.Collapse>
+          </Container>
+        </Navbar>
+
+        {/* Routing */}
+        <Container className="mt-3">
+          <Routes>
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/departments" element={<DepartmentPage />} />
+            {/* Tambahkan rute lain sesuai kebutuhan */}
+          </Routes>
+        </Container>
+      </div>
+    </Router>
   );
 }
 
