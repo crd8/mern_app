@@ -58,7 +58,12 @@ const DepartmentModal = ({ show, handleClose, handleSave, department }) => {
   };
 
   return (
-    <Modal show={show} onHide={onModalClose}>
+    <Modal
+      show={show}
+      onHide={onModalClose}
+      backdrop='static'
+      keyboard={false}
+    >
       <Modal.Header closeButton>
         <Modal.Title>{department ? 'Edit Department' : 'Add Department'}</Modal.Title>
       </Modal.Header>
@@ -72,6 +77,7 @@ const DepartmentModal = ({ show, handleClose, handleSave, department }) => {
               value={name}
               onChange={(e) => setName(e.target.value)}
               isInvalid={!!errors.name}
+              autoFocus
             />
             <Form.Control.Feedback type='invalid'>
               {errors.name}
