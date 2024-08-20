@@ -126,7 +126,7 @@ function DepartmentPage() {
   return (
     <Container>
       <Card className="mt-3">
-        <Card.Header className="text-center">Department Management</Card.Header>
+        <Card.Header>Department Management</Card.Header>
         <Card.Body>
           <Button className="mb-3" onClick={handleAdd}>Add Department</Button>
 
@@ -161,6 +161,7 @@ function DepartmentPage() {
             value={searchTerm}
             onChange={handleSearchChange}
             className='mb-3'
+            autoFocus
           />
 
           <Table striped bordered hover responsive>

@@ -9,12 +9,12 @@ function App() {
     <Router>
       <div>
         {/* Navigasi */}
-        <Navbar bg="light" expand="md">
-          <Container>
-            <Navbar.Brand as={Link} to="/">My App</Navbar.Brand>
+        <Navbar bg="light" expand="md" className="border-bottom">
+          <Container fluid>
+            <Navbar.Brand as={Link} to="/" className="fw-bold text-primary">myApp</Navbar.Brand>
             <Navbar.Toggle aria-controls="basic-navbar-nav" />
             <Navbar.Collapse id="basic-navbar-nav">
-              <Nav className="mr-auto">
+              <Nav className="me-auto">
                 <Nav.Link as={Link} to="/dashboard">Dashboard</Nav.Link>
                 <Nav.Link as={Link} to="/departments">Departments</Nav.Link>
               </Nav>
