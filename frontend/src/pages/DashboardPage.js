@@ -1,10 +1,16 @@
 import React from 'react';
+import 'bootstrap/dist/css/bootstrap.min.css';
+import { Container, Card } from 'react-bootstrap';
 
 function DashboardPage() {
   return (
-    <div>
-      <h1>Welcome back to the Dashboard</h1>
-    </div>
+    <Container>
+      <Card>
+        <Card.Body>
+          Welcome back
+        </Card.Body>
+      </Card>
+    </Container>
   );
 }
 

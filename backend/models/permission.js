@@ -3,7 +3,7 @@ const {
   Model
 } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
-  class Department extends Model {
+  class Permission extends Model {
     /**
      * Helper method for defining associations.
      * This method is not a part of Sequelize lifecycle.
@@ -13,13 +13,12 @@ module.exports = (sequelize, DataTypes) => {
       // define association here
     }
   }
-  Department.init({
+  Permission.init({
     id: {
       type: DataTypes.UUID,
       defaultValue: DataTypes.UUIDV4,
       primaryKey: true
     },
-
     name: {
       type: DataTypes.STRING,
       allowNull: false,
@@ -29,15 +28,15 @@ module.exports = (sequelize, DataTypes) => {
     description: {
       type: DataTypes.STRING,
       allowNull: false
-    },
+    }
   }, {
     sequelize,
-    modelName: 'Department',
+    modelName: 'Permission',
     // bila timestamps & paranoid true, atau salah satunya
     // tidak perlu menambahkan createdAt, updatedAt, deletedAt karena sudah
     // dikelola sequelize secara otomatis.
     timestamps: true,
-    paranoid: true,
+    paranoid: true
   });
-  return Department;
+  return Permission;
 };

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import 'bootstrap/dist/css/bootstrap.min.css';
-import { Table, Button, Container, Toast, Pagination, Form, Spinner, Card } from 'react-bootstrap';
+import { Table, Button, ButtonGroup, Container, Toast, Pagination, Form, Spinner, Card, OverlayTrigger, Tooltip } from 'react-bootstrap';
+import { BsPencilSquare, BsTrash  } from "react-icons/bs";
 import { format } from 'date-fns';
 import { enUS } from 'date-fns/locale';
 import DepartmentModal from "../components/DepartmentModal";
@@ -187,8 +188,25 @@ function DepartmentPage() {
                   <td>{formatDate(department.createdAt)}</td>
                   <td>{formatDate(department.updatedAt)}</td>
                   <td>
-                    <Button variant="info" onClick={() => handleEdit(department)} aria-label={`Edit department ${department.name}`}>Edit</Button>{' '}
-                    <Button variant="danger" onClick={() => showDeleteConfirmModal(department.id, department.name)} aria-label={`Delete department ${department.name}`}>Delete</Button>
+                    <ButtonGroup>
+                      <OverlayTrigger
+                        placement="left"
+                        overlay={<Tooltip id={`tooltip-edit-${department.id}`}>Edit</Tooltip>}
+                      >
+                        <Button variant="secondary" onClick={() => handleEdit(department)} aria-label={`Edit department ${department.name}`}>
+                          <BsPencilSquare/>
+                        </Button>
+                      </OverlayTrigger>{' '}
+                      
+                      <OverlayTrigger
+                        placement="right"
+                        overlay={<Tooltip id={`tooltip-delete-${department.id}`}>Delete</Tooltip>}
+                      >
+                        <Button variant="secondary" onClick={() => showDeleteConfirmModal(department.id, department.name)} aria-label={`Delete department ${department.name}`}>
+                          <BsTrash/>
+                        </Button>
+                      </OverlayTrigger>
+                    </ButtonGroup>
                   </td>
                 </tr>
               ))}

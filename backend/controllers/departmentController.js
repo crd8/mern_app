@@ -1,6 +1,6 @@
 const departmentService = require('../services/departmentService');
 
-exports.getAllDepartments = async (req, res, next) => {
+exports.getAllDepartments = async (req, res) => {
   try {
     const departments = await departmentService.getDepartments(req.query);
     res.json(departments);
@@ -9,7 +9,7 @@ exports.getAllDepartments = async (req, res, next) => {
   }
 };
 
-exports.getDepartmentById = async (req, res, next) => {
+exports.getDepartmentById = async (req, res) => {
   try {
     const department = await departmentService.getDepartmentById(req.params.id);
     if (department) {
@@ -22,7 +22,7 @@ exports.getDepartmentById = async (req, res, next) => {
   }
 };
 
-exports.createDepartment = async (req, res, next) => {
+exports.createDepartment = async (req, res) => {
   try {
     const { name, description } = req.body;
     const department = await departmentService.createDepartment({ name, description });
@@ -35,7 +35,7 @@ exports.createDepartment = async (req, res, next) => {
   }
 };
 
-exports.updateDepartment = async (req, res, next) => {
+exports.updateDepartment = async (req, res) => {
   try {
     const { name, description } = req.body;
     const department = await departmentService.updateDepartment(req.params.id, { name, description });
@@ -49,7 +49,7 @@ exports.updateDepartment = async (req, res, next) => {
   }
 };
 
-exports.deleteDepartment = async (req, res, next) => {
+exports.deleteDepartment = async (req, res) => {
   try {
     const result = await departmentService.deleteDepartment(req.params.id);
     if (result) {
