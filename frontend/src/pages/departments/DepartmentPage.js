@@ -4,8 +4,8 @@ import { Table, Button, ButtonGroup, Container, Toast, Pagination, Form, Spinner
 import { BsPencilSquare, BsTrash  } from "react-icons/bs";
 import { format } from 'date-fns';
 import { enUS } from 'date-fns/locale';
-import DepartmentModal from "../components/DepartmentModal";
-import ConfirmDeleteModal from "../components/ConfirmDeleteModal";
+import DepartmentModal from "../../components/departments/DepartmentModal";
+import ConfirmDeleteModal from "../../components/departments/ConfirmDeleteModal";
 
 function DepartmentPage() {
   // state hooks

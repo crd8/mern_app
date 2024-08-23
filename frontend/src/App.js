@@ -1,7 +1,7 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import { Container, Nav, Navbar } from 'react-bootstrap';
-import DepartmentPage from './pages/DepartmentPage';
+import DepartmentPage from './pages/departments/DepartmentPage';
 import Dashboard from './pages/DashboardPage';
 
 function App() {
