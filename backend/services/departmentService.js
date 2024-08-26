@@ -21,6 +21,33 @@ exports.getDepartments = async ({ page = 1, pageSize = 5, search = '' }) => {
   };
 };
 
+exports.getDeletedDepartments = async ({ page = 1, pageSize = 5, search = '' }) => {
+  const offset = (page - 1) * pageSize;
+  const { count, rows } = await Department.findAndCountAll({
+    where: {
+      [Op.and]: [
+        { deletedAt: { [Op.not]: null } },  // hanya ambil data yang soft-deleted
+        {
+          [Op.or]: [
+            { name: { [Op.like]: `%${search}%` } },
+            { description: { [Op.like]: `%${search}%` } },
+          ]
+        }
+      ]
+    },
+    paranoid: false,  // untuk mengabaikan soft-delete
+    limit: parseInt(pageSize),
+    offset: parseInt(offset),
+    order: [['deletedAt', 'DESC']],
+  });
+  return {
+    data: rows,
+    totalPages: Math.ceil(count / pageSize),
+    currentPage: parseInt(page)
+  };
+};
+
+
 exports.getDepartmentById = async (id) => {
   return await Department.findByPk(id);
 };
@@ -48,4 +75,8 @@ exports.updateDepartment = async (id, { name, description }) => {
 
 exports.deleteDepartment = async (id) => {
   return await Department.destroy({ where: { id } });
+};
+
+exports.destroyDepartment = async (id) => {
+  return await Department.destroy({ where: { id }, force: true });
 };

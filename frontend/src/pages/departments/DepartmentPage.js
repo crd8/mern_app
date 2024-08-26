@@ -19,11 +19,13 @@ function DepartmentPage() {
   const [deleteId, setDeleteId] = useState('');
   const [notification, setNotification] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [showDeleted, setShowDeleted] = useState(false);
 
   const fetchDepartments = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await fetch(`http://localhost:5000/api/departments?page=${currentPage}&search=${searchTerm}`);
+      const endpoint = showDeleted ? '/deleted-departments' : ''; // pastikan endpointnya benar
+      const response = await fetch(`http://localhost:5000/api/departments${endpoint}?page=${currentPage}&search=${searchTerm}`);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -34,9 +36,10 @@ function DepartmentPage() {
       console.error('Error fetching departments:', error);
       setNotification({ type: 'error', message: `Failed to fetch departments: ${error.message}` });
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [currentPage, searchTerm]);
+  }, [currentPage, searchTerm, showDeleted]);
+  
 
   useEffect(() => {
     fetchDepartments();
@@ -93,6 +96,27 @@ function DepartmentPage() {
     }
   };
 
+  const handleDestroy = async (id) => {
+    setLoading(true);
+    try {
+      const response = await fetch(`http://localhost:5000/api/departments/${id}/destroy`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      fetchDepartments();
+      setNotification({ type: 'success', message: 'Department permanently deleted!' });
+    } catch (error) {
+      console.error('Error destroying department', error.message);
+      setNotification({ type: 'error', message: `Failed to destroy department: ${error.message}` });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleEdit = (department) => {
     setSelectedDepartment(department);
     setShowModal(true);
@@ -126,6 +150,12 @@ function DepartmentPage() {
 
   return (
     <Container>
+      <Form.Check 
+        type="checkbox" 
+        label="Show Deleted Departments" 
+        checked={showDeleted} 
+        onChange={() => setShowDeleted(prev => !prev)} 
+      />
       <Card className="mt-3">
         <Card.Header>Department Management</Card.Header>
         <Card.Body>
@@ -182,33 +212,46 @@ function DepartmentPage() {
                 </tr>
               )}
               {departments.map((department) => (
-                <tr key={department.id}>
-                  <td>{department.name}</td>
-                  <td>{department.description}</td>
-                  <td>{formatDate(department.createdAt)}</td>
-                  <td>{formatDate(department.updatedAt)}</td>
-                  <td>
-                    <ButtonGroup>
-                      <OverlayTrigger
-                        placement="left"
-                        overlay={<Tooltip id={`tooltip-edit-${department.id}`}>Edit</Tooltip>}
-                      >
-                        <Button variant="secondary" onClick={() => handleEdit(department)} aria-label={`Edit department ${department.name}`}>
-                          <BsPencilSquare/>
-                        </Button>
-                      </OverlayTrigger>{' '}
-                      
+              <tr key={department.id}>
+                <td>{department.name}</td>
+                <td>{department.description}</td>
+                <td>{formatDate(department.createdAt)}</td>
+                <td>{formatDate(department.updatedAt)}</td>
+                <td>
+                  <ButtonGroup>
+                    {showDeleted ? (
                       <OverlayTrigger
                         placement="right"
-                        overlay={<Tooltip id={`tooltip-delete-${department.id}`}>Delete</Tooltip>}
+                        overlay={<Tooltip id={`tooltip-destroy-${department.id}`}>Destroy</Tooltip>}
                       >
-                        <Button variant="secondary" onClick={() => showDeleteConfirmModal(department.id, department.name)} aria-label={`Delete department ${department.name}`}>
-                          <BsTrash/>
+                        <Button variant="danger" onClick={() => handleDestroy(department.id)} aria-label={`Destroy department ${department.name}`}>
+                          Destroy
                         </Button>
                       </OverlayTrigger>
-                    </ButtonGroup>
-                  </td>
-                </tr>
+                    ) : (
+                      <>
+                        <OverlayTrigger
+                          placement="left"
+                          overlay={<Tooltip id={`tooltip-edit-${department.id}`}>Edit</Tooltip>}
+                        >
+                          <Button variant="secondary" onClick={() => handleEdit(department)} aria-label={`Edit department ${department.name}`}>
+                            <BsPencilSquare/>
+                          </Button>
+                        </OverlayTrigger>{' '}
+                        
+                        <OverlayTrigger
+                          placement="right"
+                          overlay={<Tooltip id={`tooltip-delete-${department.id}`}>Delete</Tooltip>}
+                        >
+                          <Button variant="secondary" onClick={() => showDeleteConfirmModal(department.id, department.name)} aria-label={`Delete department ${department.name}`}>
+                            <BsTrash/>
+                          </Button>
+                        </OverlayTrigger>
+                      </>
+                    )}
+                  </ButtonGroup>
+                </td>
+              </tr>
               ))}
             </tbody>
           </Table>

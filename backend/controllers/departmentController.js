@@ -9,6 +9,28 @@ exports.getAllDepartments = async (req, res) => {
   }
 };
 
+exports.getDeletedDepartments = async (req, res) => {
+  try {
+    const deletedDepartments = await departmentService.getDeletedDepartments(req.query);
+    res.json(deletedDepartments);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.destroyDepartment = async (req, res) => {
+  try {
+    const result = await departmentService.destroyDepartment(req.params.id);
+    if (result) {
+      res.status(200).json({ message: 'Department permanently deleted' });
+    } else {
+      res.status(404).json({ error: 'Department not found' });
+    }
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 exports.getDepartmentById = async (req, res) => {
   try {
     const department = await departmentService.getDepartmentById(req.params.id);
