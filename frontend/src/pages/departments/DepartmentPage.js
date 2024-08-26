@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useCallback } from "react";
 import 'bootstrap/dist/css/bootstrap.min.css';
-import { Table, Button, ButtonGroup, Container, Toast, Pagination, Form, Spinner, Card, OverlayTrigger, Tooltip } from 'react-bootstrap';
-import { BsPencilSquare, BsTrash  } from "react-icons/bs";
+import { Table, Button, ToggleButton, ButtonGroup, Container, Toast, Pagination, Form, Spinner, Card, OverlayTrigger, Tooltip } from 'react-bootstrap';
+import { BsPencilSquare, BsTrash } from "react-icons/bs";
 import { format } from 'date-fns';
 import { enUS } from 'date-fns/locale';
 import DepartmentModal from "../../components/departments/DepartmentModal";
 import ConfirmDeleteModal from "../../components/departments/ConfirmDeleteModal";
+import ConfirmDestroyModal from "../../components/departments/ConfirmDestroyModal";
 
 function DepartmentPage() {
   // state hooks
@@ -16,7 +17,9 @@ function DepartmentPage() {
   const [showModal, setShowModal] = useState(false);
   const [selectedDepartment, setSelectedDepartment] = useState(null);
   const [showConfirmDeleteModal, setShowConfirmDeleteModal] = useState(false);
+  const [showConfirmDestroyModal, setShowConfirmDestroyModal] = useState(false);
   const [deleteId, setDeleteId] = useState('');
+  const [destroyId, setDestroyId] = useState('');
   const [notification, setNotification] = useState(null);
   const [loading, setLoading] = useState(false);
   const [showDeleted, setShowDeleted] = useState(false);
@@ -39,7 +42,6 @@ function DepartmentPage() {
       setLoading(false);
     }
   }, [currentPage, searchTerm, showDeleted]);
-  
 
   useEffect(() => {
     fetchDepartments();
@@ -108,6 +110,7 @@ function DepartmentPage() {
       }
 
       fetchDepartments();
+      setShowConfirmDestroyModal(false);
       setNotification({ type: 'success', message: 'Department permanently deleted!' });
     } catch (error) {
       console.error('Error destroying department', error.message);
@@ -128,10 +131,15 @@ function DepartmentPage() {
   };
 
   const showDeleteConfirmModal = (id, name) => {
-    console.log('Deleting ID:', id);
     setDeleteId(id);
     setSelectedDepartment({ id, name, description: '' });
     setShowConfirmDeleteModal(true);
+  };
+
+  const showDestroyConfirmModal = (id, name) => {
+    setDestroyId(id);
+    setSelectedDepartment({ id, name, description: '' });
+    setShowConfirmDestroyModal(true);
   };
 
   const handleSearchChange = (e) => {
@@ -150,12 +158,17 @@ function DepartmentPage() {
 
   return (
     <Container>
-      <Form.Check 
-        type="checkbox" 
-        label="Show Deleted Departments" 
+      <ToggleButton
+        className="mb-2"
+        id="toggle-check"
+        type="checkbox"
+        variant="outline-dark"
         checked={showDeleted} 
-        onChange={() => setShowDeleted(prev => !prev)} 
-      />
+        value="1"
+        onChange={() => setShowDeleted(prev => !prev)}
+      >
+        Show Inactive Departments
+      </ToggleButton>
       <Card className="mt-3">
         <Card.Header>Department Management</Card.Header>
         <Card.Body>
@@ -184,107 +197,118 @@ function DepartmentPage() {
             </Toast>
           )}
 
-          {loading && <Spinner animation="border" style={{ display: 'block', margin: 'auto', marginTop: '20px' }} />}
-
-          <Form.Control
-            type='text'
-            placeholder='Search departments...'
-            value={searchTerm}
-            onChange={handleSearchChange}
-            className='mb-3'
-            autoFocus
-          />
-
-          <Table striped bordered hover responsive>
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Description</th>
-                <th>Created at</th>
-                <th>Updated at</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {departments.length === 0 && !loading && (
-                <tr>
-                  <td colSpan={5} className="text-center">No departments found</td>
-                </tr>
-              )}
-              {departments.map((department) => (
-              <tr key={department.id}>
-                <td>{department.name}</td>
-                <td>{department.description}</td>
-                <td>{formatDate(department.createdAt)}</td>
-                <td>{formatDate(department.updatedAt)}</td>
-                <td>
-                  <ButtonGroup>
-                    {showDeleted ? (
-                      <OverlayTrigger
-                        placement="right"
-                        overlay={<Tooltip id={`tooltip-destroy-${department.id}`}>Destroy</Tooltip>}
-                      >
-                        <Button variant="danger" onClick={() => handleDestroy(department.id)} aria-label={`Destroy department ${department.name}`}>
-                          Destroy
-                        </Button>
-                      </OverlayTrigger>
-                    ) : (
-                      <>
-                        <OverlayTrigger
-                          placement="left"
-                          overlay={<Tooltip id={`tooltip-edit-${department.id}`}>Edit</Tooltip>}
-                        >
-                          <Button variant="secondary" onClick={() => handleEdit(department)} aria-label={`Edit department ${department.name}`}>
-                            <BsPencilSquare/>
-                          </Button>
-                        </OverlayTrigger>{' '}
-                        
-                        <OverlayTrigger
-                          placement="right"
-                          overlay={<Tooltip id={`tooltip-delete-${department.id}`}>Delete</Tooltip>}
-                        >
-                          <Button variant="secondary" onClick={() => showDeleteConfirmModal(department.id, department.name)} aria-label={`Delete department ${department.name}`}>
-                            <BsTrash/>
-                          </Button>
-                        </OverlayTrigger>
-                      </>
-                    )}
-                  </ButtonGroup>
-                </td>
-              </tr>
-              ))}
-            </tbody>
-          </Table>
-
-          <Pagination>
-            {[...Array(totalPages)].map((_, index) => (
-              <Pagination.Item
-                key={index + 1}
-                active={index + 1 === currentPage}
-                onClick={() => handlePageChange(index + 1)}
-              >
-                {index + 1}
-              </Pagination.Item>
-            ))}
-          </Pagination>
-
-          <DepartmentModal
-            key={selectedDepartment ? selectedDepartment.id : 'new'}
-            show={showModal}
-            handleClose={() => setShowModal(false)}
-            handleSave={handleSave}
-            department={selectedDepartment}
-          />
-
-          <ConfirmDeleteModal
-            show={showConfirmDeleteModal || false}
-            handleClose={() => setShowConfirmDeleteModal(false)}
-            handleDelete={handleDelete}
-            departmentId={deleteId}
-            departmentName={selectedDepartment?.name || 'Unknown'}
-          />
+          {loading && <Spinner animation="border" />}
+          {!loading && (
+            <>
+              <Form.Control
+                type="text"
+                placeholder="Search..."
+                value={searchTerm}
+                onChange={handleSearchChange}
+                className="mb-3"
+              />
+              <Table striped bordered hover>
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Description</th>
+                    <th>Created At</th>
+                    <th>Updated At</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {departments.map((department) => (
+                    <tr key={department.id}>
+                      <td>{department.name}</td>
+                      <td>{department.description}</td>
+                      <td>{formatDate(department.createdAt)}</td>
+                      <td>{formatDate(department.updatedAt)}</td>
+                      <td>
+                        <ButtonGroup>
+                          {!showDeleted && (
+                            <>
+                              <OverlayTrigger
+                                placement="top"
+                                overlay={<Tooltip>Edit</Tooltip>}
+                              >
+                                <Button
+                                  variant="warning"
+                                  onClick={() => handleEdit(department)}
+                                >
+                                  <BsPencilSquare />
+                                </Button>
+                              </OverlayTrigger>
+                              <OverlayTrigger
+                                placement="top"
+                                overlay={<Tooltip>Delete</Tooltip>}
+                              >
+                                <Button
+                                  variant="danger"
+                                  onClick={() => showDeleteConfirmModal(department.id, department.name)}
+                                >
+                                  <BsTrash />
+                                </Button>
+                              </OverlayTrigger>
+                            </>
+                          )}
+                          {showDeleted && (
+                            <OverlayTrigger
+                              placement="top"
+                              overlay={<Tooltip>Destroy</Tooltip>}
+                            >
+                              <Button
+                                variant="danger"
+                                onClick={() => showDestroyConfirmModal(department.id, department.name)}
+                              >
+                                <BsTrash />
+                              </Button>
+                            </OverlayTrigger>
+                          )}
+                        </ButtonGroup>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </Table>
+              <Pagination>
+                {Array.from({ length: totalPages }, (_, i) => (
+                  <Pagination.Item
+                    key={i + 1}
+                    active={i + 1 === currentPage}
+                    onClick={() => handlePageChange(i + 1)}
+                  >
+                    {i + 1}
+                  </Pagination.Item>
+                ))}
+              </Pagination>
+            </>
+          )}
         </Card.Body>
       </Card>
+
+      <DepartmentModal
+        show={showModal}
+        handleClose={() => setShowModal(false)}
+        handleSave={handleSave}
+        department={selectedDepartment}
+      />
+
+      <ConfirmDeleteModal
+        show={showConfirmDeleteModal}
+        handleClose={() => setShowConfirmDeleteModal(false)}
+        handleDelete={handleDelete}
+        departmentId={deleteId}
+        departmentName={selectedDepartment?.name || ''}
+      />
+
+      <ConfirmDestroyModal
+        show={showConfirmDestroyModal}
+        handleClose={() => setShowConfirmDestroyModal(false)}
+        handleDestroy={handleDestroy}
+        departmentId={destroyId}
+        departmentName={selectedDepartment?.name || ''}
+      />
     </Container>
   );
 }
