@@ -26,7 +26,7 @@ exports.getDeletedDepartments = async ({ page = 1, pageSize = 5, search = '' }) 
   const { count, rows } = await Department.findAndCountAll({
     where: {
       [Op.and]: [
-        { deletedAt: { [Op.not]: null } },  // hanya ambil data yang soft-deleted
+        { deletedAt: { [Op.not]: null } },
         {
           [Op.or]: [
             { name: { [Op.like]: `%${search}%` } },
@@ -35,7 +35,7 @@ exports.getDeletedDepartments = async ({ page = 1, pageSize = 5, search = '' }) 
         }
       ]
     },
-    paranoid: false,  // untuk mengabaikan soft-delete
+    paranoid: false,
     limit: parseInt(pageSize),
     offset: parseInt(offset),
     order: [['deletedAt', 'DESC']],

@@ -27,7 +27,7 @@ function DepartmentPage() {
   const fetchDepartments = useCallback(async () => {
     setLoading(true);
     try {
-      const endpoint = showDeleted ? '/deleted-departments' : ''; // pastikan endpointnya benar
+      const endpoint = showDeleted ? '/deleted-departments' : '';
       const response = await fetch(`http://localhost:5000/api/departments${endpoint}?page=${currentPage}&search=${searchTerm}`);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
