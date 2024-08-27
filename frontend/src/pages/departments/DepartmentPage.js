@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useCallback } from "react";
+import axios from 'axios';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { Table, Button, ToggleButton, ButtonGroup, Container, Toast, Pagination, Form, Spinner, Card, OverlayTrigger, Tooltip } from 'react-bootstrap';
 import { BsPencilSquare, BsTrash } from "react-icons/bs";
 import { format } from 'date-fns';
-import { enUS } from 'date-fns/locale';
+import { de, enUS } from 'date-fns/locale';
 import DepartmentModal from "../../components/departments/DepartmentModal";
 import ConfirmDeleteModal from "../../components/departments/ConfirmDeleteModal";
 import ConfirmDestroyModal from "../../components/departments/ConfirmDestroyModal";
@@ -28,13 +29,14 @@ function DepartmentPage() {
     setLoading(true);
     try {
       const endpoint = showDeleted ? '/deleted-departments' : '';
-      const response = await fetch(`http://localhost:5000/api/departments${endpoint}?page=${currentPage}&search=${searchTerm}`);
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const data = await response.json();
-      setDepartments(data.data);
-      setTotalPages(data.totalPages);
+      const response = await axios.get(`http://localhost:5000/api/departments${endpoint}`, {
+        params: {
+          page: currentPage,
+          search: searchTerm,
+        }
+      });
+      setDepartments(response.data.data);
+      setTotalPages(response.data.totalPages);
     } catch (error) {
       console.error('Error fetching departments:', error);
       setNotification({ type: 'error', message: `Failed to fetch departments: ${error.message}` });
@@ -42,6 +44,7 @@ function DepartmentPage() {
       setLoading(false);
     }
   }, [currentPage, searchTerm, showDeleted]);
+  
 
   useEffect(() => {
     fetchDepartments();
@@ -50,18 +53,15 @@ function DepartmentPage() {
   const handleSave = async (department) => {
     setLoading(true);
     try {
-      const response = await fetch(
-        `http://localhost:5000/api/departments/${department.id || ''}`,
-        {
-          method: department.id ? 'PUT' : 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(department),
-        }
-      );
+      const response = await axios({
+        method: department.id ? 'PUT' : 'POST',
+        url: `http://localhost:5000/api/departments/${department.id || ''}`,
+        data: department,
+        headers: { 'Content-Type': 'application/json' },
+      });
       
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+      if (response.status !== 200 && response.status !== 201) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       fetchDepartments();
@@ -79,11 +79,9 @@ function DepartmentPage() {
   const handleDelete = async (id) => {
     setLoading(true);
     try {
-      const response = await fetch(`http://localhost:5000/api/departments/${id}`, {
-        method: 'DELETE',
-      });
+      const response = await axios.delete(`http://localhost:5000/api/departments/${id}`);
 
-      if (!response.ok) {
+      if (response.status !== 200) {
         throw new Error(`Http error! status: ${response.status}`);
       }
 
@@ -101,11 +99,9 @@ function DepartmentPage() {
   const handleDestroy = async (id) => {
     setLoading(true);
     try {
-      const response = await fetch(`http://localhost:5000/api/departments/${id}/destroy`, {
-        method: 'DELETE',
-      });
+      const response = await axios.delete(`http://localhost:5000/api/departments/${id}/destroy`);
 
-      if (!response.ok) {
+      if (response.status !== 200) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
