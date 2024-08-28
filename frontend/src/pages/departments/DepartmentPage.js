@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import axios from 'axios';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { Table, Button, ToggleButton, ButtonGroup, Container, Toast, Pagination, Form, Spinner, Card, OverlayTrigger, Tooltip } from 'react-bootstrap';
 import { BsPencilSquare, BsTrash } from "react-icons/bs";
 import { format } from 'date-fns';
-import { de, enUS } from 'date-fns/locale';
+import { enUS } from 'date-fns/locale';
 import DepartmentModal from "../../components/departments/DepartmentModal";
 import ConfirmDeleteModal from "../../components/departments/ConfirmDeleteModal";
 import ConfirmDestroyModal from "../../components/departments/ConfirmDestroyModal";
@@ -15,6 +15,7 @@ function DepartmentPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
+  const searchInputRef = useRef(null);
   const [showModal, setShowModal] = useState(false);
   const [selectedDepartment, setSelectedDepartment] = useState(null);
   const [showConfirmDeleteModal, setShowConfirmDeleteModal] = useState(false);
@@ -48,7 +49,7 @@ function DepartmentPage() {
 
   useEffect(() => {
     fetchDepartments();
-  }, [fetchDepartments]);
+  }, [fetchDepartments, currentPage, showDeleted]);
 
   const handleSave = async (department) => {
     setLoading(true);
@@ -59,18 +60,28 @@ function DepartmentPage() {
         data: department,
         headers: { 'Content-Type': 'application/json' },
       });
-      
+  
       if (response.status !== 200 && response.status !== 201) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-
+  
       fetchDepartments();
       setShowModal(false);
       setSelectedDepartment(null);
       setNotification({ type: 'success', message: 'Department saved successfully!' });
     } catch (error) {
       console.error('Error saving department:', error.message);
-      setNotification({ type: 'error', message: `Failed to save department: ${error.message}` });
+      if (error.response) {
+        // Tangani pesan kesalahan spesifik dari server
+        if (error.response.status === 400) {
+          setNotification({ type: 'error', message: error.response.data.error || 'Gagal menyimpan department' });
+        } else {
+          setNotification({ type: 'error', message: 'Failed to save department: An unexpected error occurred' });
+        }
+      } else {
+        // Tangani kasus jika tidak ada respons dari server
+        setNotification({ type: 'error', message: 'Failed to save department: An unexpected error occurred' });
+      }
     } finally {
       setLoading(false);
     }
@@ -141,7 +152,18 @@ function DepartmentPage() {
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
     setCurrentPage(1);
-  }
+  };
+
+  useEffect(() => {
+    if (searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
+  }, [searchTerm, departments, currentPage, showDeleted]);
+
+  useEffect(() => {
+    setSearchTerm('');
+    setCurrentPage(1);
+  }, [showDeleted]);
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
@@ -163,12 +185,14 @@ function DepartmentPage() {
         value="1"
         onChange={() => setShowDeleted(prev => !prev)}
       >
-        Show Inactive Departments
+        Inactive Departments
       </ToggleButton>
       <Card className="mt-3">
         <Card.Header>Department Management</Card.Header>
         <Card.Body>
-          <Button className="mb-3" onClick={handleAdd}>Add Department</Button>
+          {!showDeleted && (
+            <Button className="mb-3" onClick={handleAdd}>Add Department</Button>
+          )}
 
           {notification && (
             <Toast
@@ -202,6 +226,7 @@ function DepartmentPage() {
                 value={searchTerm}
                 onChange={handleSearchChange}
                 className="mb-3"
+                ref={searchInputRef}
               />
               <Table striped bordered hover>
                 <thead>

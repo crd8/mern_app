@@ -50,10 +50,47 @@ exports.createDepartment = async (req, res) => {
     const department = await departmentService.createDepartment({ name, description });
     res.status(201).json(department);
   } catch (error) {
-    if (error.message === 'Department name already exist') {
-      return res.status(400).json({ error: error.message });
+    if (error.message === 'Department name already exists') {
+      return res.status(400).json({ error: 'Department name already exists' });
     }
-    res.status(500).json({ error: error.message });
+    console.error('Error in createDepartment:', error);
+    res.status(500).json({ error: 'An unexpected error occurred' });
+  }
+};exports.createDepartment = async (req, res) => {
+  try {
+    const { name, description } = req.body;
+    const department = await departmentService.createDepartment({ name, description });
+    res.status(201).json(department);
+  } catch (error) {
+    if (error.message === 'Department name already exists') {
+      return res.status(400).json({ error: 'Department name already exists' });
+    }
+    console.error('Error in createDepartment:', error);
+    res.status(500).json({ error: 'An unexpected error occurred' });
+  }
+};exports.createDepartment = async (req, res) => {
+  try {
+    const { name, description } = req.body;
+    const department = await departmentService.createDepartment({ name, description });
+    res.status(201).json(department);
+  } catch (error) {
+    if (error.message === 'Department name already exists') {
+      return res.status(400).json({ error: 'Department name already exists' });
+    }
+    console.error('Error in createDepartment:', error);
+    res.status(500).json({ error: 'An unexpected error occurred' });
+  }
+};exports.createDepartment = async (req, res) => {
+  try {
+    const { name, description } = req.body;
+    const department = await departmentService.createDepartment({ name, description });
+    res.status(201).json(department);
+  } catch (error) {
+    if (error.message === 'Department name already exists') {
+      return res.status(400).json({ error: 'Department name already exists' });
+    }
+    console.error('Error in createDepartment:', error);
+    res.status(500).json({ error: 'An unexpected error occurred' });
   }
 };
 

@@ -1,7 +1,7 @@
 const { Department } = require('../models');
 const { Op } = require('sequelize');
 
-exports.getDepartments = async ({ page = 1, pageSize = 5, search = '' }) => {
+exports.getDepartments = async ({ page = 1, pageSize = 10, search = '' }) => {
   const offset = (page - 1) * pageSize;
   const { count, rows } = await Department.findAndCountAll({
     where: {
@@ -57,8 +57,8 @@ exports.createDepartment = async ({ name, description}) => {
   if (existingNameDepartment) {
     throw new Error('Department name already exist');
   }
-
-  return await Department.create({ name, description });
+  const newDepartment = new Department({ name, description });
+  return await newDepartment.save();
 };
 
 exports.updateDepartment = async (id, { name, description }) => {
