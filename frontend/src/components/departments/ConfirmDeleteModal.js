@@ -6,17 +6,18 @@ const ConfirmDeleteModal = ({ show, handleClose, handleDelete, departmentId, dep
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  // Fungsi untuk menangani klik tombol hapus
   const handleDeleteClick = async () => {
     setLoading(true);
     setError(null);
     try {
-      await handleDelete(departmentId);
-      handleClose();
+      await handleDelete(departmentId); // Menghapus departemen
+      handleClose();// Menutup modal setelah berhasil
     } catch (error) {
-      console.error('Error deleting department:', error);
-      setError('Failed to delete department. please try again.');
+      console.error('Error deleting department:', error); // Log kesalahan di console
+      setError('Failed to delete department. Please try again.'); // Set pesan kesalahan
     } finally {
-      setLoading(false);
+      setLoading(false); // Set loading ke false setelah operasi selesai
     }
   };
 
@@ -26,6 +27,9 @@ const ConfirmDeleteModal = ({ show, handleClose, handleDelete, departmentId, dep
       onHide={handleClose}
       backdrop='static'
       keyboard={false}
+      aria-labelledby="confirm-delete-modal-title"
+      role="dialog"
+      aria-live="assertive"
     >
       <Modal.Header closeButton>
         <Modal.Title>Confirm Delete</Modal.Title>
@@ -51,6 +55,7 @@ const ConfirmDeleteModal = ({ show, handleClose, handleDelete, departmentId, dep
   );
 };
 
+// Validasi tipe properti yang diterima komponen
 ConfirmDeleteModal.propTypes = {
   show: PropTypes.bool.isRequired,
   handleClose: PropTypes.func.isRequired,

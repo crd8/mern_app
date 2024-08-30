@@ -120,13 +120,14 @@ exports.createDepartment = async ({ name, description}) => {
 exports.updateDepartment = async (id, { name, description }) => {
   if (!id) throw new Error('Department ID is required'); // validasi ID
   if (!name) throw new Error('Department name is required'); // validasi name
+  if (!description) throw new Error('Department description is required'); // validasi name
 
   try {
-    // Memeriksa apakah nama departemen sudah ada
-    const existingNameDepartment = await Department.findOne({ where: { name } });
-    if (existingNameDepartment) {
-      throw new Error('Department name already exist'); // Menangani kasus nama sudah ada
-    }
+    // // Memeriksa apakah nama departemen sudah ada
+    // const existingNameDepartment = await Department.findOne({ where: { name } });
+    // if (existingNameDepartment) {
+    //   throw new Error('Department name already exist'); // Menangani kasus nama sudah ada
+    // }
 
     // Memperbarui departemen berdasarkan ID
     const [updated] = await Department.update({ name, description }, { where: { id } });

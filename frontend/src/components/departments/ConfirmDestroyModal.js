@@ -26,6 +26,9 @@ const ConfirmDestroyModal = ({ show, handleClose, handleDestroy, departmentId, d
       onHide={handleClose}
       backdrop='static'
       keyboard={false}
+      aria-labelledby="confirm-destroy-modal-title"
+      role="dialog"
+      aria-live="assertive"
     >
       <Modal.Header closeButton>
         <Modal.Title>Confirm Destroy</Modal.Title>
@@ -51,6 +54,7 @@ const ConfirmDestroyModal = ({ show, handleClose, handleDestroy, departmentId, d
   );
 };
 
+// Validasi tipe properti yang diterima komponen
 ConfirmDestroyModal.propTypes = {
   show: PropTypes.bool.isRequired,
   handleClose: PropTypes.func.isRequired,
