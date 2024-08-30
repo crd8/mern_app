@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import axios from 'axios'; // untuk melakukan permintaan HTTP
 import 'bootstrap/dist/css/bootstrap.min.css';
-import { Table, Button, ToggleButton, ButtonGroup, Container, Toast, Pagination, Form, Spinner, Card, OverlayTrigger, Tooltip } from 'react-bootstrap';
+import { Table, Button, ToggleButtonGroup, ToggleButton, ButtonGroup, Container, Toast, Pagination, Form, Spinner, Card, OverlayTrigger, Tooltip } from 'react-bootstrap';
 import { BsPencilSquare, BsTrash, BsArrowClockwise } from "react-icons/bs";
 import { format } from 'date-fns';
 import { enUS } from 'date-fns/locale';
@@ -228,17 +228,36 @@ function DepartmentPage() {
   return (
     <Container>
       {/* Tombol untuk menampilkan atau menyembunyikan departemen yang sudah dihapus */}
-      <ToggleButton
+      {/* Component untuk mengelola tombol radio */}
+      <ToggleButtonGroup
+        type="radio"
+        name="status-options"
+        value={showDeleted ? 'inactive' : 'active'} // Mengontrol nilai berdasarkan state
+        onChange={(val) => setShowDeleted(val === 'inactive')} // Mengubah state berdasarkan nilai yang dipilih
         className="mb-2"
-        id="toggle-check"
-        type="checkbox"
-        variant="outline-dark"
-        checked={showDeleted} 
-        value="1"
-        onChange={() => setShowDeleted(prev => !prev)} // Mengubah state 'showDeleted' untuk menampilkan atau menyembunyikan departemen yang dihapus
       >
-        Inactive Departments
-      </ToggleButton>
+        {/* Tombol radio untuk menampilkan department aktif */}
+        <ToggleButton
+          id="radio-active"
+          type="radio"
+          variant="outline-secondary"
+          value="active"
+          checked={!showDeleted} // Checked jika showDeleted false
+        >
+          Active
+        </ToggleButton>
+
+        {/* Tombol radio untuk menampilkan department yang telah dihapus */}
+        <ToggleButton
+          id="radio-inactive"
+          type="radio"
+          variant="outline-secondary"
+          value="inactive"
+          checked={showDeleted} // Checked jika showDeleted true
+        >
+          Inactive
+        </ToggleButton>
+      </ToggleButtonGroup>
       <Card className="mt-3">
         <Card.Header>Department Management</Card.Header>
         <Card.Body>
@@ -288,7 +307,7 @@ function DepartmentPage() {
                     <th>Name</th>
                     <th>Description</th>
                     <th>Created At</th>
-                    <th>Updated At</th>
+                    <th>{(showDeleted ? 'Deleted At' : 'Updated At')}</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
@@ -298,7 +317,7 @@ function DepartmentPage() {
                       <td>{department.name}</td>
                       <td>{department.description}</td>
                       <td>{formatDate(department.createdAt)}</td>
-                      <td>{formatDate(department.updatedAt)}</td>
+                      <td>{formatDate(showDeleted ? department.deletedAt : department.updatedAt)}</td>
                       <td>
                         <ButtonGroup>
                           {/* Tindakan edit dan hapus, hanya muncul jika 'showDeleted' bernilai false */}
