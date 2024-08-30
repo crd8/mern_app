@@ -3,12 +3,13 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import axios from 'axios'; // untuk melakukan permintaan HTTP
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { Table, Button, ToggleButton, ButtonGroup, Container, Toast, Pagination, Form, Spinner, Card, OverlayTrigger, Tooltip } from 'react-bootstrap';
-import { BsPencilSquare, BsTrash } from "react-icons/bs";
+import { BsPencilSquare, BsTrash, BsArrowClockwise } from "react-icons/bs";
 import { format } from 'date-fns';
 import { enUS } from 'date-fns/locale';
 import DepartmentModal from "../../components/departments/DepartmentModal";
 import ConfirmDeleteModal from "../../components/departments/ConfirmDeleteModal";
 import ConfirmDestroyModal from "../../components/departments/ConfirmDestroyModal";
+import ConfirmRestoreModal from "../../components/departments/ConfirmRestoreModal";
 
 function DepartmentPage() {
   // state
@@ -21,8 +22,10 @@ function DepartmentPage() {
   const [selectedDepartment, setSelectedDepartment] = useState(null); // State untuk departemen yang dipilih untuk di-edit
   const [showConfirmDeleteModal, setShowConfirmDeleteModal] = useState(false); // State untuk menampilkan atau menyembunyikan modal konfirmasi hapus
   const [showConfirmDestroyModal, setShowConfirmDestroyModal] = useState(false); // State untuk menampilkan atau menyembunyikan modal konfirmasi musnah
+  const [showConfirmRestoreModal, setShowConfirmRestoreModal] = useState(false); // State untuk menampilkan atau menyembunyikan modal konfirmasi restore
   const [deleteId, setDeleteId] = useState(''); // State untuk menyimpan ID departemen yang akan dihapus
   const [destroyId, setDestroyId] = useState(''); // State untuk menyimpan ID departemen yang akan dimusnahkan
+  const [restoreId, setRestoreId] = useState(''); // State untuk menyimpan ID departemen yang akan di restore
   const [notification, setNotification] = useState(null); // State untuk pesan notifikasi
   const [loading, setLoading] = useState(false); // State untuk mengelola indikator loading
   const [showDeleted, setShowDeleted] = useState(false); // State untuk toggle antara departemen aktif dan nonaktif
@@ -130,6 +133,27 @@ function DepartmentPage() {
     }
   };
 
+  // funsgi untuk menangani restore department
+  const handleRestore = async (id) => {
+    setLoading(true); // set state loading ke true
+    try {
+      const response = await axios.put(`http://localhost:5000/api/departments/${id}/restore`); // mengirim permintaan PUT ke endpoint restore
+
+      if (response.status !== 200) { // memeriksa status yang berhasil
+        throw new Error(`HTTP error! status: ${response.status}`); // melempar error jika status !OK
+      }
+
+      fetchDepartments(); // memperbarui data setelah restore
+      setShowConfirmRestoreModal(false); // menutup modal restore
+      setNotification({ type: 'success', message: 'Department restored successfully!' }) // menampilkan notif berhasil
+    } catch (error) {
+      console.error('Error restoring department:', error.message); // menampilkan error jika restore gagal
+      setNotification({ type: 'error', message: `Failed to restore department: ${error.message}` }) // menampilkan notif kesalahan
+    } finally {
+      setLoading(false); // set state loading ke false setelah restore selesai
+    }
+  };
+
   // Fungsi untuk menangani klik tombol edit departemen
   const handleEdit = (department) => {
     setSelectedDepartment(department); // Mengatur departemen yang dipilih untuk di-edit
@@ -157,6 +181,13 @@ function DepartmentPage() {
     setDestroyId(id); // Menyimpan ID departemen yang akan dihapus
     setSelectedDepartment({ id, name, description: '' }); // Menyimpan ID, Name dan deskripsi departemen yang akan dihapus
     setShowConfirmDestroyModal(true); // Menampilkan modal konfirmasi destroy
+  };
+
+  // fungsi untuk menangani klik tombol restore
+  const showRestoreConfirmModal = (id, name) => {
+    setRestoreId(id); // menyimpan id yang akan direstore
+    setSelectedDepartment({ id, name, description: '' }); // menyimpan id, name dan desc department yang akan di restore
+    setShowConfirmRestoreModal(true); // menampilkan confirm restore modal
   };
 
   // Fungsi untuk menangani perubahan pada input pencarian
@@ -300,17 +331,30 @@ function DepartmentPage() {
 
                           {/* Tombol untuk menghapus permanen, hanya muncul jika 'showDeleted' bernilai true */}
                           {showDeleted && (
-                            <OverlayTrigger
-                              placement="top"
-                              overlay={<Tooltip>Destroy</Tooltip>}
-                            >
-                              <Button
-                                variant="danger"
-                                onClick={() => showDestroyConfirmModal(department.id, department.name)}
+                            <>
+                              <OverlayTrigger
+                                placement="top"
+                                overlay={<Tooltip>Restore</Tooltip>}
                               >
-                                <BsTrash />
-                              </Button>
-                            </OverlayTrigger>
+                                <Button
+                                  variant="success"
+                                  onClick={() => showRestoreConfirmModal(department.id, department.name)}
+                                >
+                                  <BsArrowClockwise />
+                                </Button> 
+                              </OverlayTrigger>
+                              <OverlayTrigger
+                                placement="top"
+                                overlay={<Tooltip>Destroy</Tooltip>}
+                              >
+                                <Button
+                                  variant="danger"
+                                  onClick={() => showDestroyConfirmModal(department.id, department.name)}
+                                >
+                                  <BsTrash />
+                                </Button>
+                              </OverlayTrigger>
+                            </>
                           )}
                         </ButtonGroup>
                       </td>
@@ -355,6 +399,14 @@ function DepartmentPage() {
         handleClose={() => setShowConfirmDestroyModal(false)}
         handleDestroy={handleDestroy}
         departmentId={destroyId}
+        departmentName={selectedDepartment?.name || ''}
+      />
+
+      <ConfirmRestoreModal
+        show={showConfirmRestoreModal}
+        handleClose={() => setShowConfirmRestoreModal(false)}
+        handleRestore={handleRestore}
+        departmentId={restoreId}
         departmentName={selectedDepartment?.name || ''}
       />
     </Container>

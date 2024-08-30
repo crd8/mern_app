@@ -168,3 +168,17 @@ exports.destroyDepartment = async (id) => {
     throw new Error('Error permanently deleting department: ' + error.message); // Menangani kesalahan
   }
 };
+
+// memulihkan department yang terhapus (restore)
+exports.restoreDepartment = async (id) => {
+  if (!id) throw new Error('Department ID is required'); // validasi id
+
+  try {
+    // memulihkan department
+    const restored = await Department.restore({ where: { id }});
+    if (!restored) throw new Error('Department not found'); // menangani kasus jika ID tidak ditemukan
+    return restored;
+  } catch (error) {
+    throw new Error('Error restoring department:' + error.message); // menangani kesalahan
+  }
+};

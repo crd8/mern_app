@@ -23,4 +23,7 @@ router.delete('/:id', departmentController.deleteDepartment);
 // Mendefinisikan route untuk menghapus department secara permanen berdasarkan ID
 router.delete('/:id/destroy', departmentController.destroyDepartment);
 
+// Mendefinisikan route untuk restore department berdasarkan ID
+router.put('/:id/restore', departmentController.restoreDepartment);
+
 module.exports = router; // mengekspor route agar bisa digunakan difile lain

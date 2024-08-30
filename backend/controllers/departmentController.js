@@ -140,3 +140,23 @@ exports.destroyDepartment = async (req, res) => {
     res.status(500).json({ error: error.message }); // mengembalikan status dan pesan kesalahan
   }
 };
+
+// memulihkan department yang terhapus (restore)
+exports.restoreDepartment = async (req, res) => {
+  try {
+    const { id } = req.params; // validasi ID
+    if (!id) {
+      return res.status(400).json({ error: 'Department id is required' }); // validasi ID
+    }
+
+    const result = await departmentService.restoreDepartment(id);
+    if (result) {
+      res.status(200).json({ message: 'Department restored' }); // mengembalikan pesan sukses
+    } else {
+      res.status(400).json({ message: 'Department not found' }); // menangani kasus jika ID tidak ditemukan
+    }
+  } catch (error) {
+    console.error('Error in restoreDapartmen:', error); // logging kesalahan
+    res.status(500).json({ error: error.message }); // mengembalikan status dan pesan kesalahan
+  }
+}
