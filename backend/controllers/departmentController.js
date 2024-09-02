@@ -153,10 +153,10 @@ exports.restoreDepartment = async (req, res) => {
     if (result) {
       res.status(200).json({ message: 'Department restored' }); // mengembalikan pesan sukses
     } else {
-      res.status(400).json({ message: 'Department not found' }); // menangani kasus jika ID tidak ditemukan
+      res.status(404).json({ message: 'Department not found' }); // menangani kasus jika ID tidak ditemukan
     }
   } catch (error) {
-    console.error('Error in restoreDapartmen:', error); // logging kesalahan
+    console.error('Error in restoreDapartment:', error); // logging kesalahan
     res.status(500).json({ error: error.message }); // mengembalikan status dan pesan kesalahan
   }
 }
