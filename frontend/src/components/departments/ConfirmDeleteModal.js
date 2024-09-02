@@ -36,11 +36,11 @@ const ConfirmDeleteModal = ({ show, handleClose, handleDelete, departmentId, dep
       </Modal.Header>
       <Modal.Body>
       {error && <Alert variant="danger">{error}</Alert>}
-        <p>Are you sure you want to delete this department "{departmentName}"?</p>
+        <p>Are you sure you want to delete this department "<strong className="text-decoration-underline">{departmentName}</strong>"?</p>
         {loading && <Spinner animation="border" />}
       </Modal.Body>
       <Modal.Footer>
-        <Button variant="secondary" onClick={handleClose}>
+        <Button variant="light" onClick={handleClose}>
           Cancel
         </Button>
         <Button 

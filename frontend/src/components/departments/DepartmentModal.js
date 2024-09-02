@@ -112,7 +112,7 @@ const DepartmentModal = ({ show, handleClose, handleSave, department }) => { // 
         </Form>
       </Modal.Body>
       <Modal.Footer>
-        <Button variant='secondary' onClick={onModalClose}>
+        <Button variant='light' onClick={onModalClose}>
           Close
         </Button>
         <Button variant='primary' onClick={onSave} disabled={isSaveDisabled}>

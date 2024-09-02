@@ -304,6 +304,7 @@ function DepartmentPage() {
               <Table striped bordered hover>
                 <thead>
                   <tr>
+                    <th>#</th>
                     <th>Name</th>
                     <th>Description</th>
                     <th>Created At</th>
@@ -312,8 +313,9 @@ function DepartmentPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {departments.map((department) => (
+                  {departments.map((department, index) => (
                     <tr key={department.id}>
+                      <td>{(currentPage - 1) * 10 + (index + 1)}</td>
                       <td>{department.name}</td>
                       <td>{department.description}</td>
                       <td>{formatDate(department.createdAt)}</td>
