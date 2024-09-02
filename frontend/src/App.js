@@ -1,6 +1,6 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
-import { Container, Nav, Navbar } from 'react-bootstrap';
+import { Container, Nav, Navbar, NavDropdown } from 'react-bootstrap';
 import DepartmentPage from './pages/departments/DepartmentPage';
 import Dashboard from './pages/DashboardPage';
 
@@ -16,7 +16,9 @@ function App() {
             <Navbar.Collapse id="basic-navbar-nav">
               <Nav className="me-auto">
                 <Nav.Link as={Link} to="/dashboard">Dashboard</Nav.Link>
-                <Nav.Link as={Link} to="/departments">Departments</Nav.Link>
+                <NavDropdown title='Company' id='basic-nav-dropdown'>
+                  <NavDropdown.Item as={Link} to="/departments">Departments</NavDropdown.Item>
+                </NavDropdown>
               </Nav>
             </Navbar.Collapse>
           </Container>
