@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import PropTypes from "prop-types";
 import { Modal, Button, Spinner, Alert } from "react-bootstrap";
 
-const ConfirmDeleteModal = ({ show, handleClose, handleDelete, departmentId, departmentName }) => {
+const ConfirmDeleteModal = ({ show, handleClose, handleDelete, departmentId, departmentName, isBulkDelete = false, selectedIds = [] }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -11,11 +11,15 @@ const ConfirmDeleteModal = ({ show, handleClose, handleDelete, departmentId, dep
     setLoading(true);
     setError(null);
     try {
-      await handleDelete(departmentId); // Menghapus departemen
+      if (isBulkDelete) {
+        await Promise.all(selectedIds.map(id => handleDelete(id)));
+      } else {
+        await handleDelete(departmentId); // Menghapus departemen
+      }
       handleClose();// Menutup modal setelah berhasil
     } catch (error) {
       console.error('Error deleting department:', error); // Log kesalahan di console
-      setError('Failed to delete department. Please try again.'); // Set pesan kesalahan
+      setError('Failed to delete department(s). Please try again.'); // Set pesan kesalahan
     } finally {
       setLoading(false); // Set loading ke false setelah operasi selesai
     }
@@ -36,7 +40,11 @@ const ConfirmDeleteModal = ({ show, handleClose, handleDelete, departmentId, dep
       </Modal.Header>
       <Modal.Body>
       {error && <Alert variant="danger">{error}</Alert>}
-        <p>Are you sure you want to delete this department "<strong className="text-decoration-underline">{departmentName}</strong>"?</p>
+        {isBulkDelete ? (
+          <p>Are you sure you want to delete all selected departements?</p>
+        ) : (
+          <p>Are you sure you want to delete this department "<strong className="text-decoration-underline">{departmentName}</strong>"?</p>
+        )}
         {loading && <Spinner animation="border" />}
       </Modal.Body>
       <Modal.Footer>

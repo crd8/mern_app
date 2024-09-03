@@ -4,7 +4,7 @@ import axios from 'axios'; // untuk melakukan permintaan HTTP
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { Table, Button, ToggleButtonGroup, ToggleButton, ButtonGroup, Container, Toast, Pagination, Form, Spinner, Card, OverlayTrigger, Tooltip } from 'react-bootstrap';
 import { BsPencilSquare, BsTrash, BsArrowClockwise } from "react-icons/bs";
-import { format, set } from 'date-fns';
+import { format } from 'date-fns';
 import { enUS } from 'date-fns/locale';
 import DepartmentModal from "../../components/departments/DepartmentModal";
 import ConfirmDeleteModal from "../../components/departments/ConfirmDeleteModal";
@@ -21,6 +21,7 @@ function DepartmentPage() {
   const [showModal, setShowModal] = useState(false); // State untuk menampilkan atau menyembunyikan modal departemen
   const [selectedDepartment, setSelectedDepartment] = useState(null); // State untuk departemen yang dipilih untuk di-edit
   const [showConfirmDeleteModal, setShowConfirmDeleteModal] = useState(false); // State untuk menampilkan atau menyembunyikan modal konfirmasi hapus
+  const [showConfirmDeleteSelectedModal, setShowConfirmDeleteSelectedModal] = useState(false); // State baru untuk konfirmasi delete selected
   const [showConfirmDestroyModal, setShowConfirmDestroyModal] = useState(false); // State untuk menampilkan atau menyembunyikan modal konfirmasi musnah
   const [showConfirmRestoreModal, setShowConfirmRestoreModal] = useState(false); // State untuk menampilkan atau menyembunyikan modal konfirmasi restore
   const [deleteId, setDeleteId] = useState(''); // State untuk menyimpan ID departemen yang akan dihapus
@@ -117,14 +118,19 @@ function DepartmentPage() {
     if (selectedIds.length === 0) {
       setNotification({ type: 'error', message: 'No departments selected for deletion' });
       return;
+    } else {
+      setShowConfirmDeleteSelectedModal(true);
     }
+  };
 
+  const handleConfirmDeleteSelected = async () => {
+    setShowConfirmDeleteSelectedModal(false); // tutup modal setelah konfirmasi
     setLoading(true);
     try {
       await Promise.all(selectedIds.map(id => axios.delete(`http://localhost:5000/api/departments/${id}`)));
       fetchDepartments();
       setNotification({ type: 'success', message: 'Selected departments deleted successfully!' });
-      setSelectedIds([]); // reset setelah penghapusan
+      setSelectedIds([]); // reset selectde ID setelah penghapusan
     } catch (error) {
       console.error('Error deleting selected departments:', error.message);
       setNotification({ type: 'error', message: `Failed to delete selected departments: ${error.message}` });
@@ -451,6 +457,14 @@ function DepartmentPage() {
         handleDelete={handleDelete}
         departmentId={deleteId}
         departmentName={selectedDepartment?.name || ''}
+      />
+
+      <ConfirmDeleteModal
+        show={showConfirmDeleteSelectedModal}
+        handleClose={() => setShowConfirmDeleteSelectedModal(false)}
+        handleDelete={handleConfirmDeleteSelected}
+        isBulkDelete={true}
+        selectedIds={selectedIds}
       />
 
       <ConfirmDestroyModal
