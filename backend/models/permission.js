@@ -32,9 +32,6 @@ module.exports = (sequelize, DataTypes) => {
   }, {
     sequelize,
     modelName: 'Permission',
-    // bila timestamps & paranoid true, atau salah satunya
-    // tidak perlu menambahkan createdAt, updatedAt, deletedAt karena sudah
-    // dikelola sequelize secara otomatis.
     timestamps: true,
     paranoid: true
   });

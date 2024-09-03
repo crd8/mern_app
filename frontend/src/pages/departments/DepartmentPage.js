@@ -4,7 +4,7 @@ import axios from 'axios'; // untuk melakukan permintaan HTTP
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { Table, Button, ToggleButtonGroup, ToggleButton, ButtonGroup, Container, Toast, Pagination, Form, Spinner, Card, OverlayTrigger, Tooltip } from 'react-bootstrap';
 import { BsPencilSquare, BsTrash, BsArrowClockwise } from "react-icons/bs";
-import { format } from 'date-fns';
+import { format, set } from 'date-fns';
 import { enUS } from 'date-fns/locale';
 import DepartmentModal from "../../components/departments/DepartmentModal";
 import ConfirmDeleteModal from "../../components/departments/ConfirmDeleteModal";
@@ -29,6 +29,7 @@ function DepartmentPage() {
   const [notification, setNotification] = useState(null); // State untuk pesan notifikasi
   const [loading, setLoading] = useState(false); // State untuk mengelola indikator loading
   const [showDeleted, setShowDeleted] = useState(false); // State untuk toggle antara departemen aktif dan nonaktif
+  const [selectedIds, setSelectedIds] = useState([]); // state untuk menyimpan ID yang dipilih
 
   // untuk mengambil data department dari API
   const fetchDepartments = useCallback(async () => {
@@ -110,6 +111,32 @@ function DepartmentPage() {
     } finally {
       setLoading(false); // Set state loading ke false setelah penghapusan selesai
     }
+  };
+
+  const handleDeleteSelected = async () => {
+    if (selectedIds.length === 0) {
+      setNotification({ type: 'error', message: 'No departments selected for deletion' });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await Promise.all(selectedIds.map(id => axios.delete(`http://localhost:5000/api/departments/${id}`)));
+      fetchDepartments();
+      setNotification({ type: 'success', message: 'Selected departments deleted successfully!' });
+      setSelectedIds([]); // reset setelah penghapusan
+    } catch (error) {
+      console.error('Error deleting selected departments:', error.message);
+      setNotification({ type: 'error', message: `Failed to delete selected departments: ${error.message}` });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSelectChange = (id) => {
+    setSelectedIds(prevState => 
+      prevState.includes(id) ? prevState.filter(selectedId => selectedId !== id) : [...prevState, id]
+    );
   };
 
   // Fungsi untuk menangani pemusnahan (penghapusan permanen) departemen
@@ -265,6 +292,9 @@ function DepartmentPage() {
           {!showDeleted && (
             <Button className="mb-3" onClick={handleAdd}>Add Department</Button>
           )}
+          {selectedIds.length > 0 && (
+            <Button className="mb-3 ms-2" variant="danger" onClick={handleDeleteSelected}>Delete Selected</Button>
+          )}
           
           {/* Notifikasi jika ada pesan kesalahan atau keberhasilan */}
           {notification && (
@@ -304,6 +334,7 @@ function DepartmentPage() {
               <Table striped bordered hover>
                 <thead>
                   <tr>
+                    <th>Select</th>
                     <th>#</th>
                     <th>Name</th>
                     <th>Description</th>
@@ -315,6 +346,13 @@ function DepartmentPage() {
                 <tbody>
                   {departments.map((department, index) => (
                     <tr key={department.id}>
+                      <td>
+                        <Form.Check 
+                          type="checkbox" 
+                          checked={selectedIds.includes(department.id)}
+                          onChange={() => handleSelectChange(department.id)}
+                        />
+                      </td>
                       <td>{(currentPage - 1) * 10 + (index + 1)}</td>
                       <td>{department.name}</td>
                       <td>{department.description}</td>
