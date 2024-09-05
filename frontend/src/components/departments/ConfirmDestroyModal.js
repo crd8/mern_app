@@ -47,7 +47,7 @@ const ConfirmDestroyModal = ({ show, handleClose, handleDestroy, departmentId, d
           onClick={handleDestroyClick}
           disabled={loading}
         >
-          {loading ? 'Destroying...' : 'Destroy'}
+          {loading ? 'Destroying...' : 'Yes, destroy'}
         </Button>
       </Modal.Footer>
     </Modal>

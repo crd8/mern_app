@@ -3,7 +3,7 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import axios from 'axios'; // untuk melakukan permintaan HTTP
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { Table, Button, ToggleButtonGroup, ToggleButton, ButtonGroup, Container, Toast, Pagination, Form, Spinner, Card, OverlayTrigger, Tooltip } from 'react-bootstrap';
-import { BsPencilSquare, BsTrash, BsArrowClockwise } from "react-icons/bs";
+import { BsPencilSquare, BsTrash, BsArrowClockwise, BsArchive } from "react-icons/bs";
 import { format } from 'date-fns';
 import { enUS } from 'date-fns/locale';
 import DepartmentModal from "../../components/departments/DepartmentModal";
@@ -51,7 +51,7 @@ function DepartmentPage() {
     } finally {
       setLoading(false); // mengatur state loading ke false saat pengambilan data selesai
     }
-  }, [currentPage, searchTerm, showDeleted]); // fungsi ini akan dijlankan kembali bila cuurrenge, searchtem dan showdelete berubah
+  }, [currentPage, searchTerm, showDeleted]); // fungsi ini akan dijlankan kembali bila currentPage, searchTerm dan showDeleted berubah
   
   // useEffect untuk menjalankan fungsi fetchDepartments saat komponen dimuat atau ketika dependensi berubah
   useEffect(() => {
@@ -124,13 +124,14 @@ function DepartmentPage() {
   };
 
   const handleConfirmDeleteSelected = async () => {
-    setShowConfirmDeleteSelectedModal(false); // tutup modal setelah konfirmasi
+    setShowConfirmDeleteSelectedModal(false);
     setLoading(true);
+  
     try {
-      await Promise.all(selectedIds.map(id => axios.delete(`http://localhost:5000/api/departments/${id}`)));
+      const response = await axios.post('http://localhost:5000/api/departments/batch-delete', { ids: selectedIds });
       fetchDepartments();
       setNotification({ type: 'success', message: 'Selected departments deleted successfully!' });
-      setSelectedIds([]); // reset selectde ID setelah penghapusan
+      setSelectedIds([]);
     } catch (error) {
       console.error('Error deleting selected departments:', error.message);
       setNotification({ type: 'error', message: `Failed to delete selected departments: ${error.message}` });
@@ -204,6 +205,10 @@ function DepartmentPage() {
 
   // Fungsi untuk menangani klik tombol hapus
   const showDeleteConfirmModal = (id, name) => {
+    if (!id) {
+      console.error("invalid ID for deletion");
+      return;
+    }
     setDeleteId(id); // Menyimpan ID departemen yang akan dihapus
     setSelectedDepartment({ id, name, description: '' }); // Menyimpan ID, Name dan deskripsi departemen yang akan dihapus
     setShowConfirmDeleteModal(true); // Menampilkan modal konfirmasi penghapusan
@@ -240,6 +245,7 @@ function DepartmentPage() {
   useEffect(() => {
     setSearchTerm(''); // Mengosongkan kata kunci pencarian ketika 'showDeleted' berubah
     setCurrentPage(1); // Mengatur halaman saat ini ke halaman pertama setiap kali 'showDeleted' berubah
+    setSelectedIds([]); // Mengosongkan pilihan select saat beralih antara active dan inactive
   }, [showDeleted]); // fungsi ini akan dijlankan kembali bila showdeleted berubah
 
   // Fungsi untuk menangani perubahan halaman
@@ -273,7 +279,7 @@ function DepartmentPage() {
         <ToggleButton
           id="radio-active"
           type="radio"
-          variant="outline-secondary"
+          variant="outline-dark"
           value="active"
           checked={!showDeleted} // Checked jika showDeleted false
         >
@@ -284,11 +290,11 @@ function DepartmentPage() {
         <ToggleButton
           id="radio-inactive"
           type="radio"
-          variant="outline-secondary"
+          variant="outline-dark"
           value="inactive"
           checked={showDeleted} // Checked jika showDeleted true
         >
-          Inactive
+          Archive
         </ToggleButton>
       </ToggleButtonGroup>
       <Card className="mt-3">
@@ -296,10 +302,10 @@ function DepartmentPage() {
         <Card.Body>
           {/* Tombol untuk menambahkan departemen baru, hanya muncul jika 'showDeleted' bernilai false */}
           {!showDeleted && (
-            <Button className="mb-3" onClick={handleAdd}>Add Department</Button>
+            <Button className="mb-3" variant="primary" onClick={handleAdd}>Add</Button>
           )}
           {selectedIds.length > 0 && (
-            <Button className="mb-3 ms-2" variant="danger" onClick={handleDeleteSelected}>Delete Selected</Button>
+            <Button className="mb-3 ms-2" variant="warning" onClick={handleDeleteSelected}>Archive</Button>
           )}
           
           {/* Notifikasi jika ada pesan kesalahan atau keberhasilan */}
@@ -337,29 +343,31 @@ function DepartmentPage() {
                 className="mb-3"
                 ref={searchInputRef}
               />
-              <Table striped bordered hover>
+              <Table striped>
                 <thead>
                   <tr>
-                    <th>Select</th>
                     <th>#</th>
+                    <th>Select</th>
                     <th>Name</th>
                     <th>Description</th>
                     <th>Created At</th>
                     <th>{(showDeleted ? 'Deleted At' : 'Updated At')}</th>
-                    <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {departments.map((department, index) => (
-                    <tr key={department.id}>
+                    <tr
+                      key={department.id}
+                      className={selectedIds.includes(department.id) ? "table-active" : ""}
+                    >
+                      <th>{(currentPage - 1) * 10 + (index + 1)}</th>
                       <td>
                         <Form.Check 
-                          type="checkbox" 
+                          type="checkbox"
                           checked={selectedIds.includes(department.id)}
                           onChange={() => handleSelectChange(department.id)}
                         />
                       </td>
-                      <td>{(currentPage - 1) * 10 + (index + 1)}</td>
                       <td>{department.name}</td>
                       <td>{department.description}</td>
                       <td>{formatDate(department.createdAt)}</td>
@@ -374,7 +382,7 @@ function DepartmentPage() {
                                 overlay={<Tooltip>Edit</Tooltip>}
                               >
                                 <Button
-                                  variant="warning"
+                                  variant="link"
                                   onClick={() => handleEdit(department)}
                                 >
                                   <BsPencilSquare />
@@ -382,13 +390,13 @@ function DepartmentPage() {
                               </OverlayTrigger>
                               <OverlayTrigger
                                 placement="top"
-                                overlay={<Tooltip>Delete</Tooltip>}
+                                overlay={<Tooltip>Archive</Tooltip>}
                               >
                                 <Button
-                                  variant="danger"
+                                  variant="link"
                                   onClick={() => showDeleteConfirmModal(department.id, department.name)}
                                 >
-                                  <BsTrash />
+                                  <BsArchive />
                                 </Button>
                               </OverlayTrigger>
                             </>
@@ -402,7 +410,7 @@ function DepartmentPage() {
                                 overlay={<Tooltip>Restore</Tooltip>}
                               >
                                 <Button
-                                  variant="success"
+                                  variant="link"
                                   onClick={() => showRestoreConfirmModal(department.id, department.name)}
                                 >
                                   <BsArrowClockwise />
@@ -413,7 +421,7 @@ function DepartmentPage() {
                                 overlay={<Tooltip>Destroy</Tooltip>}
                               >
                                 <Button
-                                  variant="danger"
+                                  variant="link"
                                   onClick={() => showDestroyConfirmModal(department.id, department.name)}
                                 >
                                   <BsTrash />

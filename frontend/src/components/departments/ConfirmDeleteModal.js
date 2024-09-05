@@ -41,9 +41,9 @@ const ConfirmDeleteModal = ({ show, handleClose, handleDelete, departmentId, dep
       <Modal.Body>
       {error && <Alert variant="danger">{error}</Alert>}
         {isBulkDelete ? (
-          <p>Are you sure you want to delete all selected departements?</p>
+          <p>Are you sure you want to archive all selected departements?</p>
         ) : (
-          <p>Are you sure you want to delete this department "<strong className="text-decoration-underline">{departmentName}</strong>"?</p>
+          <p>Are you sure you want to archive this department "<strong className="text-decoration-underline">{departmentName}</strong>"?</p>
         )}
         {loading && <Spinner animation="border" />}
       </Modal.Body>
@@ -52,11 +52,11 @@ const ConfirmDeleteModal = ({ show, handleClose, handleDelete, departmentId, dep
           Cancel
         </Button>
         <Button 
-          variant="danger"
+          variant="warning"
           onClick={handleDeleteClick}
           disabled={loading}
         >
-          {loading ? 'Deleting...' : 'Delete'}
+          {loading ? 'Archiving...' : 'Yes, archive'}
         </Button>
       </Modal.Footer>
     </Modal>
@@ -68,8 +68,10 @@ ConfirmDeleteModal.propTypes = {
   show: PropTypes.bool.isRequired,
   handleClose: PropTypes.func.isRequired,
   handleDelete: PropTypes.func.isRequired,
-  departmentId: PropTypes.string.isRequired,
-  departmentName: PropTypes.string.isRequired,
+  departmentId: PropTypes.string,
+  departmentName: PropTypes.string,
+  isBulkDelete: PropTypes.bool,
+  selectedIds: PropTypes.arrayOf(PropTypes.string),
 };
 
 export default ConfirmDeleteModal;

@@ -120,6 +120,23 @@ exports.deleteDepartment = async (req, res) => {
   }
 };
 
+// Controller untuk batch delete departemen
+exports.batchDeleteDepartments = async (req, res) => {
+  const { ids } = req.body;
+
+  try {
+    if (!ids || ids.length === 0) {
+      return res.status(400).json({ message: 'Department IDs are required' });
+    }
+
+    const result = await departmentService.batchDeleteDepartments(ids);
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error('Error deleting departments:', error.message);
+    return res.status(500).json({ message: 'Error deleting selected departments', error: error.message });
+  }
+};
+
 // menghapus department secara permanen
 exports.destroyDepartment = async (req, res) => {
   try {

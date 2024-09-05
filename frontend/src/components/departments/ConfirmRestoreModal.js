@@ -45,7 +45,7 @@ const ConfirmRestoreModal = ({ show, handleClose, handleRestore, departmentId, d
           onClick={handleRestoreClick} 
           disabled={loading}
         >
-          {loading ? 'Restoring...' : 'Restore'}
+          {loading ? 'Restoring...' : 'Yes, restore'}
         </Button>
       </Modal.Footer>
     </Modal>

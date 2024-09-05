@@ -20,6 +20,9 @@ router.put('/:id', departmentController.updateDepartment);
 // Mendefinisikan route untuk menghapus department (soft delete) berdasarkan ID
 router.delete('/:id', departmentController.deleteDepartment);
 
+// Mendefinisikan route untuk menghapus department (soft delete) berdasarkan ID yang terselected
+router.post('/batch-delete', departmentController.batchDeleteDepartments);
+
 // Mendefinisikan route untuk menghapus department secara permanen berdasarkan ID
 router.delete('/:id/destroy', departmentController.destroyDepartment);
 

@@ -148,10 +148,40 @@ exports.deleteDepartment = async (id) => {
   try {
     // Menghapus departemen (soft delete) jika paranoid = true di model
     const deleted = await Department.destroy({ where: { id } });
-    if (deleted === 0) throw new Error('Department not found'); // Menangani kasus jika tidak ditemukan
-    return deleted;
+    if (deleted === 0) {
+      return { message: 'Department not found', status: 404 };
+    }
+    return { message: 'Department deleted', status: 200 };
   } catch (error) {
+    console.error('Error deleting department:', error.message); // Log error untuk debugging
     throw new Error('Error deleting department: ' + error.message); // Menangani kesalahan
+  }
+};
+
+// menghapus department secara batch delete
+exports.batchDeleteDepartments = async (ids) => {
+  console.log('IDs to delete:', ids); // Debugging log
+
+  if (!ids || ids.length === 0) throw new Error('Department IDs are required');
+
+  try {
+    // Menghapus departemen (soft delete) jika paranoid = true di model
+    const deleted = await Department.destroy({
+      where: {
+        id: ids,
+        deletedAt: null // Tambahkan kondisi ini untuk memastikan hanya yang belum terhapus yang dihapus
+      }
+    });
+
+    if (deleted === 0) {
+      console.warn('No departments were deleted - possibly already deleted or not found.');
+      return { message: 'No departments were deleted - possibly already deleted or not found.' };
+    }
+    
+    return { message: 'Selected departments deleted successfully' };
+  } catch (error) {
+    console.error('Error deleting departments:', error.message);
+    throw new Error('Error deleting selected departments: ' + error.message);
   }
 };
 
