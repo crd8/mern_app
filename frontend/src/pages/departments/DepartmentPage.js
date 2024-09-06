@@ -2,8 +2,8 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import axios from 'axios'; // untuk melakukan permintaan HTTP
 import 'bootstrap/dist/css/bootstrap.min.css';
-import { Table, Button, ToggleButtonGroup, ToggleButton, ButtonGroup, Container, Toast, Pagination, Form, Spinner, Card, OverlayTrigger, Tooltip } from 'react-bootstrap';
-import { BsPencilSquare, BsTrash, BsArrowClockwise, BsArchive } from "react-icons/bs";
+import { Table, Button, ToggleButtonGroup, ToggleButton, ButtonGroup, Container, Toast, Pagination, Form, Spinner, OverlayTrigger, Tooltip } from 'react-bootstrap';
+import { BsPencilSquare, BsTrash, BsArchive, BsArrowRepeat, BsDatabaseCheck, BsDatabaseX } from "react-icons/bs";
 import { format } from 'date-fns';
 import { enUS } from 'date-fns/locale';
 import DepartmentModal from "../../components/departments/DepartmentModal";
@@ -265,76 +265,84 @@ function DepartmentPage() {
   };
 
   return (
-    <Container>
-      {/* Tombol untuk menampilkan atau menyembunyikan departemen yang sudah dihapus */}
-      {/* Component untuk mengelola tombol radio */}
-      <ToggleButtonGroup
-        type="radio"
-        name="status-options"
-        value={showDeleted ? 'inactive' : 'active'} // Mengontrol nilai berdasarkan state
-        onChange={(val) => setShowDeleted(val === 'inactive')} // Mengubah state berdasarkan nilai yang dipilih
-        className="mb-2"
-      >
-        {/* Tombol radio untuk menampilkan department aktif */}
-        <ToggleButton
-          id="radio-active"
-          type="radio"
-          variant="outline-dark"
-          value="active"
-          checked={!showDeleted} // Checked jika showDeleted false
+    <Container className="pt-4">
+      {/* Notifikasi jika ada pesan kesalahan atau keberhasilan */}
+      {notification && (
+        <Toast
+          onClose={() => setNotification(null)} // Menutup notifikasi saat di-klik
+          autohide
+          delay={8000}
+          show={!!notification}
+          style={{
+            position: 'fixed',
+            top: 20,
+            right: 20,
+            minWidth: '200px',
+            zIndex: 1050
+          }}
         >
-          Active
-        </ToggleButton>
+          <Toast.Header>
+            <strong className="me-auto">
+              {notification.type === 'success' ? 'Success Notification' : 'Error Notification'}
+            </strong>
+          </Toast.Header>
+          <Toast.Body>{notification.message}</Toast.Body>
+        </Toast>
+      )}
+      {/* Spinner/loading indicator muncul saat data sedang diambil */}
+      {loading && <Spinner animation="border" />}
+      {!loading && (
+        <>
+          <div className="d-flex justify-content-between">
+            <div>
+              {/* Tombol untuk menambahkan departemen baru, hanya muncul jika 'showDeleted' bernilai false */}
+              {!showDeleted && (
+                <Button variant="primary" onClick={handleAdd}>Add</Button>
+              )}
+              {selectedIds.length > 0 && (
+                <Button className="ms-1" variant="warning" onClick={handleDeleteSelected}>Archive</Button>
+              )}
+            </div>
+            <div>
+              {/* Tombol untuk menampilkan atau menyembunyikan departemen yang sudah dihapus */}
+              {/* Component untuk mengelola tombol radio */}
+              <ToggleButtonGroup
+                type="radio"
+                name="status-options"
+                value={showDeleted ? 'inactive' : 'active'} // Mengontrol nilai berdasarkan state
+                onChange={(val) => setShowDeleted(val === 'inactive')} // Mengubah state berdasarkan nilai yang dipilih
+                className="mb-2"
+              >
+                {/* Tombol radio untuk menampilkan department aktif */}
+                <ToggleButton
+                  id="radio-active"
+                  type="radio"
+                  variant="outline-dark"
+                  value="active"
+                  checked={!showDeleted} // Checked jika showDeleted false
+                >
+                  <BsDatabaseCheck size={22} />
+                </ToggleButton>
 
-        {/* Tombol radio untuk menampilkan department yang telah dihapus */}
-        <ToggleButton
-          id="radio-inactive"
-          type="radio"
-          variant="outline-dark"
-          value="inactive"
-          checked={showDeleted} // Checked jika showDeleted true
-        >
-          Archive
-        </ToggleButton>
-      </ToggleButtonGroup>
-      <Card className="mt-3">
-        <Card.Header>Department Management</Card.Header>
-        <Card.Body>
-          {/* Tombol untuk menambahkan departemen baru, hanya muncul jika 'showDeleted' bernilai false */}
-          {!showDeleted && (
-            <Button className="mb-3" variant="primary" onClick={handleAdd}>Add</Button>
-          )}
-          {selectedIds.length > 0 && (
-            <Button className="mb-3 ms-2" variant="warning" onClick={handleDeleteSelected}>Archive</Button>
-          )}
-          
-          {/* Notifikasi jika ada pesan kesalahan atau keberhasilan */}
-          {notification && (
-            <Toast
-              onClose={() => setNotification(null)} // Menutup notifikasi saat di-klik
-              autohide
-              delay={8000}
-              show={!!notification}
-              style={{
-                position: 'fixed',
-                top: 20,
-                right: 20,
-                minWidth: '200px',
-                zIndex: 1050
-              }}
-            >
-              <Toast.Header>
-                <strong className="me-auto">
-                  {notification.type === 'success' ? 'Success Notification' : 'Error Notification'}
-                </strong>
-              </Toast.Header>
-              <Toast.Body>{notification.message}</Toast.Body>
-            </Toast>
-          )}
-          {/* Spinner/loading indicator muncul saat data sedang diambil */}
-          {loading && <Spinner animation="border" />}
-          {!loading && (
-            <>
+                {/* Tombol radio untuk menampilkan department yang telah dihapus */}
+                <ToggleButton
+                  id="radio-inactive"
+                  type="radio"
+                  variant="outline-dark"
+                  value="inactive"
+                  checked={showDeleted} // Checked jika showDeleted true
+                >
+                  <BsDatabaseX size={22} />
+                </ToggleButton>
+              </ToggleButtonGroup>
+            </div>
+          </div>
+          <div className="d-sm-flex justify-content-between align-items-end">
+            <div>
+              <h4 className="fw-semibold">{(showDeleted ? 'List of archive departments' : 'List of active departments')}</h4>
+              <p className="text-muted">lorem ipsum dolor sit amet lorem ipsum dolor sit amet</p>
+            </div>
+            <div>
               <Form.Control
                 type="text"
                 placeholder="Search..."
@@ -343,118 +351,118 @@ function DepartmentPage() {
                 className="mb-3"
                 ref={searchInputRef}
               />
-              <Table striped>
-                <thead>
-                  <tr>
-                    <th>#</th>
-                    {!showDeleted && (
-                      <th>Select</th>
-                    )}
-                    <th>Name</th>
-                    <th>Description</th>
-                    <th>Created At</th>
-                    <th>{(showDeleted ? 'Deleted At' : 'Updated At')}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {departments.map((department, index) => (
-                    <tr
-                      key={department.id}
-                      className={selectedIds.includes(department.id) ? "table-active" : ""}
-                    >
-                      <th>{(currentPage - 1) * 10 + (index + 1)}</th>
+            </div>
+          </div>
+          <Table responsive>
+            <thead>
+              <tr>
+                <th>#</th>
+                {!showDeleted && (
+                  <th>Select</th>
+                )}
+                <th style={{minWidth: 200}}>Name</th>
+                <th style={{minWidth: 400}}>Description</th>
+                <th className="text-nowrap" style={{minWidth: 145}}>Created At</th>
+                <th className="text-nowrap" style={{minWidth: 145}}>{(showDeleted ? 'Deleted At' : 'Updated At')}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {departments.map((department, index) => (
+                <tr
+                  key={department.id}
+                  className={selectedIds.includes(department.id) ? "table-active" : ""}
+                >
+                  <th>{(currentPage - 1) * 10 + (index + 1)}</th>
+                  {!showDeleted && (
+                  <td className="text-end">
+                    <input
+                    type="checkbox"
+                    checked={selectedIds.includes(department.id)}
+                    onChange={() => handleSelectChange(department.id)}
+                    />
+                  </td>
+                  )}
+                  <td className="text-secondary-emphasis">{department.name}</td>
+                  <td className="text-secondary-emphasis">{department.description}</td>
+                  <td className="text-secondary-emphasis">{formatDate(department.createdAt)}</td>
+                  <td className="text-secondary-emphasis">{formatDate(showDeleted ? department.deletedAt : department.updatedAt)}</td>
+                  <td>
+                    <ButtonGroup>
+                      {/* Tindakan edit dan hapus, hanya muncul jika 'showDeleted' bernilai false */}
                       {!showDeleted && (
-                      <td>
-                        <input
-                        type="checkbox"
-                        checked={selectedIds.includes(department.id)}
-                        onChange={() => handleSelectChange(department.id)}
-                        />
-                      </td>
+                        <>
+                          <OverlayTrigger
+                            placement="top"
+                            overlay={<Tooltip>Edit</Tooltip>}
+                          >
+                            <Button
+                              variant="link"
+                              onClick={() => handleEdit(department)}
+                            >
+                              <BsPencilSquare />
+                            </Button>
+                          </OverlayTrigger>
+                          <OverlayTrigger
+                            placement="top"
+                            overlay={<Tooltip>Archive</Tooltip>}
+                          >
+                            <Button
+                              variant="link"
+                              onClick={() => showDeleteConfirmModal(department.id, department.name)}
+                            >
+                              <BsArchive />
+                            </Button>
+                          </OverlayTrigger>
+                        </>
                       )}
-                      <td>{department.name}</td>
-                      <td>{department.description}</td>
-                      <td>{formatDate(department.createdAt)}</td>
-                      <td>{formatDate(showDeleted ? department.deletedAt : department.updatedAt)}</td>
-                      <td>
-                        <ButtonGroup>
-                          {/* Tindakan edit dan hapus, hanya muncul jika 'showDeleted' bernilai false */}
-                          {!showDeleted && (
-                            <>
-                              <OverlayTrigger
-                                placement="top"
-                                overlay={<Tooltip>Edit</Tooltip>}
-                              >
-                                <Button
-                                  variant="link"
-                                  onClick={() => handleEdit(department)}
-                                >
-                                  <BsPencilSquare />
-                                </Button>
-                              </OverlayTrigger>
-                              <OverlayTrigger
-                                placement="top"
-                                overlay={<Tooltip>Archive</Tooltip>}
-                              >
-                                <Button
-                                  variant="link"
-                                  onClick={() => showDeleteConfirmModal(department.id, department.name)}
-                                >
-                                  <BsArchive />
-                                </Button>
-                              </OverlayTrigger>
-                            </>
-                          )}
 
-                          {/* Tombol untuk menghapus permanen, hanya muncul jika 'showDeleted' bernilai true */}
-                          {showDeleted && (
-                            <>
-                              <OverlayTrigger
-                                placement="top"
-                                overlay={<Tooltip>Restore</Tooltip>}
-                              >
-                                <Button
-                                  variant="link"
-                                  onClick={() => showRestoreConfirmModal(department.id, department.name)}
-                                >
-                                  <BsArrowClockwise />
-                                </Button> 
-                              </OverlayTrigger>
-                              <OverlayTrigger
-                                placement="top"
-                                overlay={<Tooltip>Destroy</Tooltip>}
-                              >
-                                <Button
-                                  variant="link"
-                                  onClick={() => showDestroyConfirmModal(department.id, department.name)}
-                                >
-                                  <BsTrash />
-                                </Button>
-                              </OverlayTrigger>
-                            </>
-                          )}
-                        </ButtonGroup>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </Table>
-              
-              <Pagination>
-                {Array.from({ length: totalPages }, (_, i) => (
-                  <Pagination.Item
-                    key={i + 1}
-                    active={i + 1 === currentPage}
-                    onClick={() => handlePageChange(i + 1)}
-                  >
-                    {i + 1}
-                  </Pagination.Item>
-                ))}
-              </Pagination>
-            </>
-          )}
-        </Card.Body>
-      </Card>
+                      {/* Tombol untuk menghapus permanen, hanya muncul jika 'showDeleted' bernilai true */}
+                      {showDeleted && (
+                        <>
+                          <OverlayTrigger
+                            placement="top"
+                            overlay={<Tooltip>Restore</Tooltip>}
+                          >
+                            <Button
+                              variant="link"
+                              onClick={() => showRestoreConfirmModal(department.id, department.name)}
+                            >
+                              <BsArrowRepeat />
+                            </Button> 
+                          </OverlayTrigger>
+                          <OverlayTrigger
+                            placement="top"
+                            overlay={<Tooltip>Destroy</Tooltip>}
+                          >
+                            <Button
+                              variant="link"
+                              onClick={() => showDestroyConfirmModal(department.id, department.name)}
+                            >
+                              <BsTrash />
+                            </Button>
+                          </OverlayTrigger>
+                        </>
+                      )}
+                    </ButtonGroup>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </Table>
+          
+          <Pagination className="mt-3">
+            {Array.from({ length: totalPages }, (_, i) => (
+              <Pagination.Item
+                key={i + 1}
+                active={i + 1 === currentPage}
+                onClick={() => handlePageChange(i + 1)}
+              >
+                {i + 1}
+              </Pagination.Item>
+            ))}
+          </Pagination>
+        </>
+      )}
 
       <DepartmentModal
         show={showModal}

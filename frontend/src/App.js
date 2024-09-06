@@ -12,9 +12,13 @@ function App() {
         <Navbar bg="light" expand="md" className="border-bottom">
           <Container fluid>
             <Navbar.Brand as={Link} to="/" className="fw-bold text-primary">myApp</Navbar.Brand>
-            <Navbar.Toggle aria-controls="basic-navbar-nav" />
-            <Navbar.Collapse id="basic-navbar-nav">
-              <Nav className="me-auto">
+            <Navbar.Toggle aria-controls="navbarScroll" />
+            <Navbar.Collapse id="navbarScroll">
+              <Nav 
+                className="me-auto my-2 my-lg-0"
+                style={{ maxHeight: '100px' }}
+                navbarScroll
+              >
                 <Nav.Link as={Link} to="/dashboard">Dashboard</Nav.Link>
                 <NavDropdown title='Company' id='basic-nav-dropdown'>
                   <NavDropdown.Item as={Link} to="/departments">Departments</NavDropdown.Item>
