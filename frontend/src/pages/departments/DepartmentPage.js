@@ -128,7 +128,7 @@ function DepartmentPage() {
     setLoading(true);
   
     try {
-      const response = await axios.post('http://localhost:5000/api/departments/batch-delete', { ids: selectedIds });
+      await axios.post('http://localhost:5000/api/departments/batch-delete', { ids: selectedIds });
       fetchDepartments();
       setNotification({ type: 'success', message: 'Selected departments deleted successfully!' });
       setSelectedIds([]);
@@ -347,7 +347,9 @@ function DepartmentPage() {
                 <thead>
                   <tr>
                     <th>#</th>
-                    <th>Select</th>
+                    {!showDeleted && (
+                      <th>Select</th>
+                    )}
                     <th>Name</th>
                     <th>Description</th>
                     <th>Created At</th>
@@ -361,13 +363,15 @@ function DepartmentPage() {
                       className={selectedIds.includes(department.id) ? "table-active" : ""}
                     >
                       <th>{(currentPage - 1) * 10 + (index + 1)}</th>
+                      {!showDeleted && (
                       <td>
-                        <Form.Check 
-                          type="checkbox"
-                          checked={selectedIds.includes(department.id)}
-                          onChange={() => handleSelectChange(department.id)}
+                        <input
+                        type="checkbox"
+                        checked={selectedIds.includes(department.id)}
+                        onChange={() => handleSelectChange(department.id)}
                         />
                       </td>
+                      )}
                       <td>{department.name}</td>
                       <td>{department.description}</td>
                       <td>{formatDate(department.createdAt)}</td>
