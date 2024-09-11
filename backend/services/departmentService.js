@@ -100,19 +100,21 @@ exports.getDepartmentById = async (id) => {
 // Membuat departemen baru
 exports.createDepartment = async ({ name, description}) => {
   if (!name) throw new Error('Department name is required'); // Validasi nama
+  if (!description) throw new Error('Department description is required'); // Validasi description
 
   try {
     // Memeriksa apakah nama departemen sudah ada
-    const existingNameDepartment = await Department.findOne({ where: { name } }); // memeriksa apakah nama sudah ada pada db
+    const existingNameDepartment  = await Department.findOne({ where: { name } }); // memeriksa apakah nama sudah ada pada db
     if (existingNameDepartment) {
-      throw new Error('Department name already exist'); // Menangani kasus nama sudah ada
+      throw new Error('Department name already exists'); // Menangani kasus nama sudah ada
     }
     
     // Membuat departemen baru
     const newDepartment = await Department.create({ name, description });
     return newDepartment;
   } catch (error) {
-    throw new Error('Error creating department: ' + error.message); // Menangani kesalahan
+    console.error('Error creating department:', error.message); // Logging kesalahan
+    throw new Error(error.message); // Menangani kesalahan
   }
 };
 
@@ -190,12 +192,20 @@ exports.destroyDepartment = async (id) => {
   if (!id) throw new Error('Department ID is required'); // validasi ID
 
   try {
+    // cari department terlebih dahulu
+    const department = await Department.findOne({ where: {id}, paranoid: false });
+    // jika tidak ditemukan, lempar error
+    if (!department) throw new Error('Department not found');
+
+    // Periksa apakah deletedAt sudah terisi
+    if (!department.deletedAt) throw new Error('Department must be soft deleted first');
+
     // Menghapus departemen secara permanen
     const destroyed = await Department.destroy({ where: { id }, force: true }); // menghapus secara hard delete atau permanent
-    if (destroyed === 0) throw new Error('Department not found'); // Menangani kasus jika tidak ditemukan
     return destroyed;
   } catch (error) {
-    throw new Error('Error permanently deleting department: ' + error.message); // Menangani kesalahan
+    console.error('Error permanently deleting department:', error.message);
+    throw new Error(error.message); // Menangani kesalahan
   }
 };
 

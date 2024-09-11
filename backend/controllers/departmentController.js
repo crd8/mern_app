@@ -60,12 +60,12 @@ exports.createDepartment = async (req, res) => {
     }
 
     const department = await departmentService.createDepartment({ name, description });
-    res.status(201).json(department); // mengembalikan data department baru sebagai json
+    res.status(201).json({ message: 'Department created successfully', department }); // mengembalikan data department baru sebagai json
   } catch (error) {
-    if (error.message === 'Department name already exists') {
+    if (error.message === 'Department name already exists') { // Sesuaikan dengan pesan dari service
       return res.status(400).json({ error: 'Department name already exists' });
     }
-    console.error('Error in createDepartment:', error); // logging kesalahan
+    console.error('Error in createDepartment:', error.message); // logging kesalahan
     res.status(500).json({ error: 'An unexpected error occurred' }); // Mengembalikan status dan pesan kesalahan
   }
 };
@@ -89,7 +89,7 @@ exports.updateDepartment = async (req, res) => {
 
     const department = await departmentService.updateDepartment(id, { name, description });
     if (department) {
-      res.json(department); // Mengembalikan data departemen yang diperbarui sebagai JSON
+      res.json({ message: 'Department update successfully', department }); // Mengembalikan data departemen yang diperbarui sebagai JSON
     } else {
       res.status(404).json({ error: 'Department not found' }); // Menangani kasus jika departemen tidak ditemukan
     }
@@ -99,24 +99,23 @@ exports.updateDepartment = async (req, res) => {
   }
 };
 
-// menghapus department (soft-delete)
+// Menghapus departemen (soft-delete)
 exports.deleteDepartment = async (req, res) => {
   try {
-    // validasi ID
     const { id } = req.params;
     if (!id) {
-      return res.status(400).json({ error: 'Department ID is required' }); // validasi ID
+      return res.status(400).json({ error: 'Department ID is required' }); // Validasi ID
     }
 
     const result = await departmentService.deleteDepartment(id);
-    if (result) {
-      res.status(200).json({ message: 'Department deleted' }); // Mengembalikan pesan sukses
+    if (result.message === 'Department not found') {
+      res.status(404).json({ error: result.message }); // Menangani kasus jika departemen tidak ditemukan
     } else {
-      res.status(404).json({ error: 'Department not found' }); // Menangani kasus jika departemen tidak ditemukan
+      res.status(200).json({ message: result.message }); // Mengembalikan pesan sukses
     }
   } catch (error) {
-    console.error('Error in deleteDepartment:', error); // logging kesalahan
-    res.status(500).json({ error: error.message }); // mengembalikan status dan pesan kesalahan
+    console.error('Error in deleteDepartment:', error); // Logging kesalahan
+    res.status(500).json({ error: error.message }); // Mengembalikan status dan pesan kesalahan
   }
 };
 
@@ -147,14 +146,13 @@ exports.destroyDepartment = async (req, res) => {
     }
 
     const result = await departmentService.destroyDepartment(id);
-    if (result) {
-      res.status(200).json({ message: 'Department permanently deleted' }); // Mengembalikan pesan sukses
-    } else {
-      res.status(404).json({ error: 'Department not found' }); // Menangani kasus jika departemen tidak ditemukan
-    }
+    res.status(200).json({ message: 'Department permanently deleted' }); // Mengembalikan pesan sukses
   } catch (error) {
-    console.error('Error in destroyDepartment:', error); // logging kesalahan
-    res.status(500).json({ error: error.message }); // mengembalikan status dan pesan kesalahan
+    if (error.message === 'Department not found' || error.message === 'Department must be soft deleted first') {
+      return res.status(400).json({ error: error.message }); // mengembalikan pesan error
+    }
+    console.error('Error in destroyDepartment:', error.message); // logging kesalahan
+    res.status(500).json({ error: 'An unexpected error occurred' }); // mengembalikan status dan pesan kesalahan
   }
 };
 

@@ -2,6 +2,7 @@ import React from "react";
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import { Container, Nav, Navbar, NavDropdown } from 'react-bootstrap';
 import DepartmentPage from './pages/departments/DepartmentPage';
+import PermissionPage from './pages/permissions/PermissionPage';
 import Dashboard from './pages/DashboardPage';
 
 function App() {
@@ -22,6 +23,7 @@ function App() {
                 <Nav.Link as={Link} to="/dashboard">Dashboard</Nav.Link>
                 <NavDropdown title='Company' id='basic-nav-dropdown'>
                   <NavDropdown.Item as={Link} to="/departments">Departments</NavDropdown.Item>
+                  <NavDropdown.Item as={Link} to="/permissions">Permissions</NavDropdown.Item>
                 </NavDropdown>
               </Nav>
             </Navbar.Collapse>
@@ -33,6 +35,7 @@ function App() {
           <Routes>
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/departments" element={<DepartmentPage />} />
+            <Route path="/permissions" element={<PermissionPage />} />
             {/* Tambahkan rute lain sesuai kebutuhan */}
           </Routes>
         </Container>

@@ -9,7 +9,9 @@ app.use(express.json()); // Middleware untuk parsing request body dalam format J
 // app.use(morgan('dev')); // logging setiap permintaan
 
 const departmentRoute = require('./routes/departmentRoute'); // Mengimpor rute untuk departemen dari file departmentRoute.js.
+const permissionRoute = require('./routes/permissionRoute');
 app.use('/api/departments', departmentRoute); // Menetapkan rute dasar /api/departments untuk semua rute terkait departemen. Semua permintaan ke /api/departments akan diarahkan ke departmentRoute.
+app.use('/api/permissions', permissionRoute);
 
 app.get('/', (req, res) => {
   res.send('Hello from Express!');
