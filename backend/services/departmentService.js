@@ -40,7 +40,7 @@ exports.getDepartments = async ({ page = 1, pageSize = 10, search = '' }) => { /
 };
 
 // mengambil data department yang non aktif atau softdelete
-exports.getDeletedDepartments = async ({ page = 1, pageSize = 5, search = '' }) => { // parameter paginasi dan pencarian
+exports.getDeletedDepartments = async ({ page = 1, pageSize = 10, search = '' }) => { // parameter paginasi dan pencarian
   // valiasi input untuk memastikan halaman dan ukuran halaman adalah angka valid dan positif
   const pageNum = parseInt(page, 10);
   const size = parseInt(pageSize, 10);

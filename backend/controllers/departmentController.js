@@ -146,7 +146,11 @@ exports.destroyDepartment = async (req, res) => {
     }
 
     const result = await departmentService.destroyDepartment(id);
-    res.status(200).json({ message: 'Department permanently deleted' }); // Mengembalikan pesan sukses
+    if (result) {
+      res.status(200).json({ message: 'Department permanently deleted' });
+    } else {
+      res.status(404).json({ message: 'Department not found' });
+    }
   } catch (error) {
     if (error.message === 'Department not found' || error.message === 'Department must be soft deleted first') {
       return res.status(400).json({ error: error.message }); // mengembalikan pesan error
@@ -174,4 +178,4 @@ exports.restoreDepartment = async (req, res) => {
     console.error('Error in restoreDapartment:', error); // logging kesalahan
     res.status(500).json({ error: error.message }); // mengembalikan status dan pesan kesalahan
   }
-}
+};
