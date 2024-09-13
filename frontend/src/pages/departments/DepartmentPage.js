@@ -345,7 +345,7 @@ function DepartmentPage() {
             <div>
               <Form.Control
                 type="text"
-                placeholder="Search..."
+                placeholder="Search department..."
                 value={searchTerm}
                 onChange={handleSearchChange}
                 className="mb-3"
