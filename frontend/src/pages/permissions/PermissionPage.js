@@ -106,6 +106,11 @@ function PermissionPage() {
     }
   };
 
+  const handleEdit = (permission) => {
+    setSelectedPermission(permission);
+    setShowModal(true);
+  };
+
   return (
     <Container className='pt-4'>
       {notification && (
@@ -214,6 +219,7 @@ function PermissionPage() {
                           >
                             <Button
                               variant='link'
+                              onClick={() => handleEdit(permission)}
                             >
                               <BsPencilSquare/>
                             </Button>
