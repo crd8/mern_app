@@ -5,6 +5,7 @@ import { Button, Container, Spinner, Toast, ToggleButton, ToggleButtonGroup, For
 import { BsArchive, BsDatabaseCheck, BsDatabaseX, BsPencilSquare } from 'react-icons/bs'
 import { format } from 'date-fns';
 import { enUS } from 'date-fns/locale';
+import PermissionModal from '../../components/permissions/PermissionModal';
 
 function PermissionPage() {
   // useState for fetch permission
@@ -17,6 +18,9 @@ function PermissionPage() {
   
   const [loading, setLoading] = useState(false);
   const [notification, setNotification] = useState(null);
+
+  const [showModal, setShowModal] = useState(false);
+  const [selectedPermission, setSelectedPermission] = useState(null);
 
   // fetch permission
   const fetchPermissions = useCallback(async () => {
@@ -59,6 +63,49 @@ function PermissionPage() {
     return format(date, "dd MMMM yyyy, HH:mm:ss", { locale: enUS });
   }
 
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
+
+  const handleAdd = () => {
+    setSelectedPermission(null);
+    setShowModal(true);
+  }
+
+  const handleSave = async (permission) => {
+    setLoading(true);
+    try {
+      const response = await axios({
+        method: permission.id ? 'PUT' : 'POST',
+        url: `http://localhost:5000/api/permissions/${permission.id || ''}`,
+        data: permission,
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      if (response.status !== 200 && response.status !== 201) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      fetchPermissions();
+      setShowModal(false);
+      setSelectedPermission(null);
+      setNotification({ type: 'success', message: 'Permission successfully saved' });
+    } catch (error) {
+      console.error(' Error saving permission: ', error.message);
+      if (error.response) {
+        if (error.response.status === 400) {
+          setNotification({ type: 'error', message: error.response.data.error || 'Failed to save permission' });
+        } else {
+          setNotification({ type: 'error', message: 'Failed to save permission: An unexpected error occurred'})
+        }
+      } else {
+        setNotification({ type: 'error', message: 'Failed to save permission: An unexpected error occurred'})
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <Container className='pt-4'>
       {notification && (
@@ -91,7 +138,7 @@ function PermissionPage() {
           <div className='d-flex justify-content-between'>
             <div>
               {!showDeleted && (
-                <Button variant='primary'>Add</Button>
+                <Button variant='primary' onClick={handleAdd} >Add</Button>
               )}
             </div>
             <div>
@@ -192,18 +239,25 @@ function PermissionPage() {
           </Table>
 
           <Pagination className='mt-3'>
-            {Array.from({ length: totalPages }, (_, i) =>
+            {Array.from({ length: totalPages }, (_, i) => (
               <Pagination.Item
                 key={i + 1}
                 active={i + 1 === currentPage}
-                
+                onClick={() => handlePageChange(i + 1)}
               >
                 {i + 1}
               </Pagination.Item>
-            )}
+            ))}
           </Pagination>
         </>
       )}
+      
+      <PermissionModal
+        show={showModal}
+        handleClose={() => setShowModal(false)}
+        handleSave={handleSave}
+        permission={selectedPermission}
+      />
     </Container>
   )
 }
