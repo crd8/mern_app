@@ -317,7 +317,7 @@ function DepartmentPage() {
                 <ToggleButton
                   id="radio-active"
                   type="radio"
-                  variant="outline-dark"
+                  variant="outline-primary"
                   value="active"
                   checked={!showDeleted} // Checked jika showDeleted false
                 >
@@ -328,7 +328,7 @@ function DepartmentPage() {
                 <ToggleButton
                   id="radio-inactive"
                   type="radio"
-                  variant="outline-dark"
+                  variant="outline-secondary"
                   value="inactive"
                   checked={showDeleted} // Checked jika showDeleted true
                 >
@@ -337,12 +337,12 @@ function DepartmentPage() {
               </ToggleButtonGroup>
             </div>
           </div>
-          <div className="d-sm-flex justify-content-between align-items-end">
-            <div>
+          <div className="d-md-flex justify-content-between align-items-end">
+            <div className="col-md-7">
               <h4 className="fw-semibold">{(showDeleted ? 'List of archive departments' : 'List of active departments')}</h4>
-              <p className="text-muted">lorem ipsum dolor sit amet lorem ipsum dolor sit amet</p>
+              <p className="text-muted">List of currently active departments, displaying all departments that are still active in the system. You can also view departments that have been archived or deactivated by switching to archive mode.</p>
             </div>
-            <div>
+            <div className="col-md-4">
               <Form.Control
                 type="text"
                 placeholder="Search department..."

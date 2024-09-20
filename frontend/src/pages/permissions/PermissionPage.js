@@ -276,12 +276,12 @@ function PermissionPage() {
               </ToggleButtonGroup>
             </div>
           </div>
-          <div className='d-sm-flex justify-content-between align-items-end'>
-            <div>
+          <div className='d-md-flex justify-content-between align-items-end'>
+            <div className="col-md-7">
               <h4 className='fw-semibold'>{(showDeleted ? 'List of archive permissions' : 'List of active permissions')}</h4>
-              <p className='text-muted'>Lorem ipsum dolor sit amet, dolor lorem</p>
+              <p className='text-muted'>List of currently active permissions, displaying all permissions that are still active in the system. You can also view permissions that have been archived or deactivated by switching to archive mode.</p>
             </div>
-            <div>
+            <div className="col-md-4">
               <Form.Control
                 type='text'
                 placeholder='Search permission...'
