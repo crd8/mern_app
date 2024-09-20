@@ -31,7 +31,7 @@ const ConfirmDestroyModal = ({ show, handleClose, handleDestroy, departmentId, d
       aria-live="assertive"
     >
       <Modal.Header closeButton>
-        <Modal.Title>Confirm Destroy</Modal.Title>
+        <Modal.Title>Confirm Delete</Modal.Title>
       </Modal.Header>
       <Modal.Body>
       {error && <Alert variant="danger">{error}</Alert>}

@@ -41,7 +41,6 @@ const PermissionModal = ({ permission, show, handleClose, handleSave }) => {
     if (!description) tempErrors.description = 'Description is required';
     setErrors(tempErrors);
     return Object.keys(tempErrors).length === 0;
-    
   }
 
   const onSave = async () => {
@@ -68,7 +67,7 @@ const PermissionModal = ({ permission, show, handleClose, handleSave }) => {
       aria-labelledby='permission-modal-title'
     >
       <Modal.Header closeButton>
-        <Modal.Title>{permission ? 'Edit permission' : 'Add permission'}</Modal.Title>
+        <Modal.Title>{permission ? 'Edit Permission' : 'Add Permission'}</Modal.Title>
       </Modal.Header>
       <Modal.Body>
         {saveError && <Alert variant='danger'>{saveError}</Alert>}
@@ -80,7 +79,7 @@ const PermissionModal = ({ permission, show, handleClose, handleSave }) => {
               value={name}
               onChange={(e) => setName(e.target.value)}
               isInvalid={!!errors.name}
-              autofocus
+              autoFocus
               required
             />
             <Form.Control.Feedback type='invalid'>

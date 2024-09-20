@@ -2,10 +2,13 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import axios from 'axios';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { Button, Container, Spinner, Toast, ToggleButton, ToggleButtonGroup, Form, Table, ButtonGroup, OverlayTrigger, Tooltip, Pagination } from 'react-bootstrap';
-import { BsArchive, BsDatabaseCheck, BsDatabaseX, BsPencilSquare } from 'react-icons/bs'
+import { BsArchive, BsArrowRepeat, BsDatabaseCheck, BsDatabaseX, BsPencilSquare, BsTrash } from 'react-icons/bs'
 import { format } from 'date-fns';
 import { enUS } from 'date-fns/locale';
 import PermissionModal from '../../components/permissions/PermissionModal';
+import ConfirmDeleteModal from '../../components/permissions/ConfirmDeleteModal';
+import ConfirmRestoreModal from '../../components/permissions/ConfirmRestoreModal';
+import ConfirmDestroyModal from '../../components/permissions/ConfirmDestroyModal';
 
 function PermissionPage() {
   // useState for fetch permission
@@ -21,6 +24,15 @@ function PermissionPage() {
 
   const [showModal, setShowModal] = useState(false);
   const [selectedPermission, setSelectedPermission] = useState(null);
+
+  const [deleteId, setDeleteId] = useState('');
+  const [showConfirmDeleteModal, setShowConfirmDeleteModal] = useState(false);
+
+  const [restoreId, setRestoreId] = useState('');
+  const [showConfirmRestoreModal, setShowConfirmRestoreModal] = useState(false);
+
+  const [destroyId, setDestroyId] = useState('');
+  const [showConfirmDestroyModal, setShowConfirmDestroyModal] = useState(false);
 
   // fetch permission
   const fetchPermissions = useCallback(async () => {
@@ -67,9 +79,44 @@ function PermissionPage() {
     setCurrentPage(page);
   };
 
-  const handleAdd = () => {
+  const showAddModal = () => {
     setSelectedPermission(null);
     setShowModal(true);
+  }
+
+  const showEditModal = (permission) => {
+    setSelectedPermission(permission);
+    setShowModal(true);
+  };
+
+  const showDeleteConfirmModal = (id, name) => {
+    if (!id) {
+      console.error('Invalid permission ID for deletion');
+      return;
+    }
+    setDeleteId(id);
+    setSelectedPermission({ id, name, description: '' });
+    setShowConfirmDeleteModal(true);
+  };
+
+  const showRestoreConfirmModal = (id, name) => {
+    if (!id) {
+      console.error('Invalid permission ID for restoring');
+      return;
+    }
+    setRestoreId(id);
+    setSelectedPermission({ id, name, description: '' });
+    setShowConfirmRestoreModal(true);
+  };
+
+  const showDestroyConfirmModal = (id, name) => {
+    if (!id) {
+      console.error('Invalid permission ID for destroying');
+      return;
+    }
+    setDestroyId(id);
+    setSelectedPermission({ id, name, description: '' })
+    setShowConfirmDestroyModal(true);
   }
 
   const handleSave = async (permission) => {
@@ -106,9 +153,62 @@ function PermissionPage() {
     }
   };
 
-  const handleEdit = (permission) => {
-    setSelectedPermission(permission);
-    setShowModal(true);
+  const handleDelete = async (id) => {
+    setLoading(true);
+    try {
+      const response = await axios.delete(`http://localhost:5000/api/permissions/${id}`);
+      if (response.status !== 200) {
+        throw new Error(`Http error! status: ${response.status}`);
+      }
+
+      fetchPermissions();
+      setShowConfirmDeleteModal(false);
+      setNotification({ type: 'success', message: 'Permission successfully deleted' });
+    } catch (error) {
+      console.error('Error deleting permission: ', error.message);
+      setNotification({ type: 'error', message: `Failed to delete permission: ${error.message}` });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRestore = async (id) => {
+    setLoading(true);
+
+    try {
+      const response = await axios.put(`http://localhost:5000/api/permissions/${id}/restore`);
+      if (response.status !== 200) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      fetchPermissions();
+      setShowConfirmRestoreModal(false);
+      setNotification({ type: 'success', message: 'Permission successfully restored' });
+    } catch (error) {
+      console.error('Error restoring permission: ', error.message);
+      setNotification({ type: 'error', message: `Failed to restore permission: ${error.message}` });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDestroy = async (id) => {
+    setLoading(true);
+
+    try {
+      const response = await axios.delete(`http://localhost:5000/api/permissions/${id}/destroy`);
+      if (response.status !== 200) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      fetchPermissions();
+      setShowConfirmDestroyModal(false);
+      setNotification({ type: 'success', message: 'Permission successfully deleted' });
+    } catch (error) {
+      console.error('Error destroying permission', error.message);
+      setNotification({ type: 'error', message: `Failed to destroy permission: ${error.message}` });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -143,7 +243,7 @@ function PermissionPage() {
           <div className='d-flex justify-content-between'>
             <div>
               {!showDeleted && (
-                <Button variant='primary' onClick={handleAdd} >Add</Button>
+                <Button variant='primary' onClick={showAddModal} >Add</Button>
               )}
             </div>
             <div>
@@ -185,7 +285,8 @@ function PermissionPage() {
               <Form.Control
                 type='text'
                 placeholder='Search permission...'
-                value={handleSearchChange}
+                value={searchTerm}
+                onChange={handleSearchChange}
                 className='mb-3'
                 ref={searchInputRef}
               />
@@ -219,9 +320,9 @@ function PermissionPage() {
                           >
                             <Button
                               variant='link'
-                              onClick={() => handleEdit(permission)}
+                              onClick={() => showEditModal(permission)}
                             >
-                              <BsPencilSquare/>
+                              <BsPencilSquare />
                             </Button>
                           </OverlayTrigger>
 
@@ -231,8 +332,37 @@ function PermissionPage() {
                           >
                             <Button
                               variant='link'
+                              onClick={() => showDeleteConfirmModal(permission.id, permission.name)}
                             >
-                              <BsArchive/>
+                              <BsArchive />
+                            </Button>
+                          </OverlayTrigger>
+                        </>
+                      )}
+
+                      {showDeleted && (
+                        <>
+                          <OverlayTrigger
+                            placement='top'
+                            overlay={<Tooltip>Restore</Tooltip>}
+                          >
+                            <Button
+                              variant='link'
+                              onClick={() => showRestoreConfirmModal(permission.id, permission.name)}
+                            >
+                              <BsArrowRepeat />
+                            </Button>
+                          </OverlayTrigger>
+
+                          <OverlayTrigger
+                            placement='top'
+                            overlay={<Tooltip>Destroy</Tooltip>}
+                          >
+                            <Button
+                              variant='link'
+                              onClick={() => showDestroyConfirmModal(permission.id, permission.name)}
+                            >
+                              <BsTrash />
                             </Button>
                           </OverlayTrigger>
                         </>
@@ -263,6 +393,30 @@ function PermissionPage() {
         handleClose={() => setShowModal(false)}
         handleSave={handleSave}
         permission={selectedPermission}
+      />
+
+      <ConfirmDeleteModal
+        show={showConfirmDeleteModal}
+        handleClose={() => setShowConfirmDeleteModal(false)}
+        handleDelete={handleDelete}
+        permissionId={deleteId}
+        permissionName={selectedPermission?.name || ''}
+      />
+
+      <ConfirmRestoreModal
+        show={showConfirmRestoreModal}
+        handleClose={() => setShowConfirmRestoreModal(false)}
+        handleRestore={handleRestore}
+        permissionId={restoreId}
+        permissionName={selectedPermission?.name || ''}
+      />
+
+      <ConfirmDestroyModal
+        show={showConfirmDestroyModal}
+        handleClose={() => setShowConfirmDestroyModal(false)}
+        handleDestroy={handleDestroy}
+        permissionId={destroyId}
+        permissionName={selectedPermission?.name || ''}
       />
     </Container>
   )
