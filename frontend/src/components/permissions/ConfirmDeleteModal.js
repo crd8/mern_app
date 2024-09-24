@@ -36,7 +36,7 @@ const ConfirmDeleteModal = ({ show, handleClose, handleDelete, permissionId, per
     </Modal.Header>
     <Modal.Body>
       {error && <Alert variant="danger">{error}</Alert>}
-      <p>Are you sure you want to archive this permission "<strong className="text-decoration-underline">{permissionName}</strong>"</p>
+      <p>Are you sure you want to archive this permission "<strong className="text-decoration-underline">{permissionName}</strong>"? <br/> <small className="text-muted">The data can still be restored in the future if needed.</small></p>
       {loading && <Spinner animation="border"/>}
     </Modal.Body>
     <Modal.Footer>

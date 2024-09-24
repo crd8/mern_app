@@ -41,9 +41,9 @@ const ConfirmDeleteModal = ({ show, handleClose, handleDelete, departmentId, dep
       <Modal.Body>
       {error && <Alert variant="danger">{error}</Alert>}
         {isBulkDelete ? (
-          <p>Are you sure you want to archive all selected departements?</p>
+          <p>Are you sure you want to archive <strong>all selected departements</strong>? <br/> The data can still be restored in the future if needed.</p>
         ) : (
-          <p>Are you sure you want to archive this department "<strong className="text-decoration-underline">{departmentName}</strong>"?</p>
+          <p>Are you sure you want to archive this department "<strong className="text-decoration-underline">{departmentName}</strong>"? <br/> <small className="text-muted">The data can still be restored in the future if needed.</small></p>
         )}
         {loading && <Spinner animation="border" />}
       </Modal.Body>

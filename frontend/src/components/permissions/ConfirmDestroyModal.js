@@ -36,7 +36,7 @@ const ConfirmDestroyModal = ({ show, handleClose, handleDestroy, permissionId, p
       </Modal.Header>
       <Modal.Body>
         {error && <Alert variant="danger">{error}</Alert>}
-        <p>Are you sure you want to permanently destroy this permission "<strong className="text-decoration-underline">{permissionName}</strong>"?</p>
+        <p>Are you sure you want to permanently destroy this permission "<strong className="text-decoration-underline">{permissionName}</strong>"? <br/> <small className="text-muted">This action cannot be undone, and the data will not be recoverable.</small></p>
         {loading && <Spinner animation="border" />}
       </Modal.Body>
       <Modal.Footer>

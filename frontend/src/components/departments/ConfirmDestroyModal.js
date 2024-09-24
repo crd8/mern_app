@@ -35,7 +35,7 @@ const ConfirmDestroyModal = ({ show, handleClose, handleDestroy, departmentId, d
       </Modal.Header>
       <Modal.Body>
       {error && <Alert variant="danger">{error}</Alert>}
-        <p>Are you sure you want to permanently destroy this department "<strong className="text-decoration-underline">{departmentName}</strong>"?</p>
+        <p>Are you sure you want to permanently destroy this department "<strong className="text-decoration-underline">{departmentName}</strong>"? <br/> <small className="text-muted">This action cannot be undone, and the data will not be recoverable.</small></p>
         {loading && <Spinner animation="border" />}
       </Modal.Body>
       <Modal.Footer>
