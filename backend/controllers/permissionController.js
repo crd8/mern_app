@@ -25,7 +25,7 @@ exports.getAllDeletedPermissions = async (req, res) => {
 exports.getPermissionById = async (req, res) => {
   try {
     const { id } = req.params;
-    if(!id) return res.status(400).json({ error: 'Permission ID is required' });
+    if (!id) return res.status(400).json({ error: 'Permission ID is required' });
 
     const permission = await permissionService.getPermissionById(id);
     if (permission) {

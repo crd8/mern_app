@@ -1,4 +1,4 @@
-const { Permission, sequelize } = require('../models');
+const { Permission } = require('../models');
 const { Op } = require('sequelize');
 
 exports.getPermissions = async ({ page = 1, pageSize = 10, search = '' }) => {
