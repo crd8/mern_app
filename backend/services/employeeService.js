@@ -32,6 +32,43 @@ exports.getEmployees = async ({ page = 1, pageSize = 10, search = '' }) => {
   }
 };
 
+exports.getDeletedEmployees = async ({ page = 1, pageSize = 10, search = '' }) => {
+  const pageNum = parseInt(page, 10);
+  const size = parseInt(pageSize, 10);
+  if (isNaN(pageNum) || pageNum <= 0) throw new Error('Invalid page number');
+  if (isNaN(size) || size <= 0) throw new Error('Invalid page size');
+
+  const offset = (pageNum - 1) * size;
+
+  try {
+    const { count, rows } = await Employee.findAndCountAll({
+      where: {
+        [Op.and]: [
+          { deletedAt: { [Op.not]: null } },
+          {
+            [Op.or]: [
+              { fullname: { [Op.like]: `%${search}%` } },
+              { nip: { [Op.like]: `%${search}%` } },
+            ],
+          }
+        ]
+      },
+      paranoid: false,
+      limit: size,
+      offset: offset,
+      order: [['deletedAt', 'DESC']],
+    });
+
+    return {
+      data: rows,
+      totalPages: Math.ceil(count / size),
+      currentPage: pageNum,
+    };
+  } catch (error) {
+    throw new Error('Error fetching deleted employee: ' + error.message);
+  }
+};
+
 exports.getEmployeeById = async (id) => {
   if (!id) throw new Error('Employee ID is required');
 
@@ -103,5 +140,46 @@ exports.updateEmployee = async (id, employeeData) => {
     throw new Error('Employee not found');
   } catch (error) {
     throw new Error('Error updating employee: ' + error.message);
+  }
+};
+
+exports.deleteEmployee = async (id) => {
+  if (!id) throw new Error('Employee ID is required');
+
+  try {
+    const deleted = await Employee.destroy({ where: { id } });
+    if (deleted === 0) return { message: 'Employee not found', status: 404 };
+    return { message: 'Employee successfully deleted', status: 200 };
+  } catch (error) {
+    console.error('Error deleting employee: ', error.message);
+    throw new Error('Error deleting employee: ' + error.message);
+  }
+};
+
+exports.destroyEmployee = async (id) => {
+  if (!id) throw new Error('Employee ID is required');
+
+  try {
+    const employee = await Employee.findOne({ where: { id }, paranoid: false });
+    if (!employee) throw new Error('Employee not found');
+    if (!employee.deletedAt) throw new Error('Employee must be soft deleted first');
+
+    const destroyed = await Employee.destroy({ where: { id }, force: true });
+    return destroyed;
+  } catch (error) {
+    console.error('Error permanently deleting employee: ', error.message);
+    throw new Error(error.message);
+  }
+};
+
+exports.restoreEmployee = async (id) => {
+  if (!id) throw new Error('Employee ID is required');
+
+  try {
+    const restored = await Employee.restore({ where: { id } });
+    if (!restored) throw new Error('Employee not found');
+    return restored;
+  } catch (error) {
+    throw new Error('Error restoring employee: ', + error.message);
   }
 };

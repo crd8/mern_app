@@ -11,6 +11,17 @@ exports.getAllEmployees = async (req, res) => {
   }
 };
 
+exports.getAllDeletedEmployees = async (req, res) => {
+  try {
+    const { page = 1, pageSize = 10, search = ''} = req.query;
+    const deletedEmployees = await employeeService.getDeletedEmployees({ page, pageSize, search });
+    res.json(deletedEmployees);
+  } catch (error) {
+    console.error('Error in get deleted employees: ', error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
 exports.getEmployeeById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -76,6 +87,60 @@ exports.updateEmployee = async (req, res) => {
     }
   } catch (error) {
     console.error('Error in update employee: ', error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.deleteEmployee = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!id) return res.status(400).json({ message: 'Employee ID is required' });
+
+    const result = await employeeService.deleteEmployee(id);
+    if (result.message === 'Employee not found') {
+      res.status(404).json({ error: result.message });
+    } else {
+      res.status(200).json({ message: result.message });
+    }
+  } catch (error) {
+    console.error('Error in delete employee: ', error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.destroyEmployee = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!id) return res.status(400).json({ error: 'Employee ID is required' });
+
+    const result = await employeeService.destroyEmployee(id);
+    if (!result) {
+      res.status(200).json({ message: 'Employee successfully permanently deleted' });
+    } else {
+      res.status(404).json({ message: 'Employee not found' });
+    }
+  } catch (error) {
+    if (error.message === 'Employee not found' || error.message === 'Employee must be soft deleted first') {
+      return res.status(400).json({ error: error.message });
+    }
+    console.error('Error in destroyed employee: ', error.message);
+    res.status(500).json({ error: 'An unexpected error occured' });
+  }
+};
+
+exports.restoreEmployee = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!id) return res.status(400).json({ error: 'Employee ID is required' });
+
+    const result = await employeeService.restoreEmployee(id);
+    if (result) {
+      res.status(200).json({ message: 'Employee successfully restored' });
+    } else {
+      res.status(404).json({ message: 'Employee not found'});
+    }
+  } catch (error) {
+    console.error('Error in restore employee: ', error);
     res.status(500).json({ error: error.message });
   }
 };

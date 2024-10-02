@@ -133,7 +133,7 @@ exports.destroyPermission = async (id) => {
     const permission = await Permission.findOne({ where: { id }, paranoid: false });
     
     if (!permission) throw new Error('Permission not found');
-    if (!permission.deletedAt) throw new Error('Permission must be soft deleted firts');
+    if (!permission.deletedAt) throw new Error('Permission must be soft deleted first');
 
     const destroyed = await Permission.destroy({ where: { id }, force: true });
     return destroyed;
