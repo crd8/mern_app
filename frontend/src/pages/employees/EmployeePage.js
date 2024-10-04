@@ -154,11 +154,11 @@ function EmployeePage() {
               {employees.map((employee, index) => (
                 <tr key={employee.id}>
                   <th>{(currentPage - 1) * 10 + (index + 1)}</th>
-                  <td>{employee.nip}</td>
-                  <td>{employee.fullname}</td>
-                  <td>{formatDate(employee.date_of_birth)}</td>
-                  <td>{formatDate(employee.hire_date)}</td>
-                  <td>{employee.employee_status}</td>
+                  <td className='text-secondary-emphasis'>{employee.nip}</td>
+                  <td className='text-secondary-emphasis'>{employee.fullname}</td>
+                  <td className='text-secondary-emphasis'>{formatDate(employee.date_of_birth)}</td>
+                  <td className='text-secondary-emphasis'>{formatDate(employee.hire_date)}</td>
+                  <td className='text-secondary-emphasis'>{employee.employee_status}</td>
                 </tr>
               ))}
             </tbody>

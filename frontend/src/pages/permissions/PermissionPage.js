@@ -306,10 +306,10 @@ function PermissionPage() {
               {permissions.map((permission, index) => (
                 <tr key={permission.id}>
                   <th>{(currentPage - 1) * 10 + (index + 1)}</th>
-                  <td className='text-secondary-empahasis'>{permission.name}</td>
-                  <td className='text-secondary-empahasis'>{permission.description}</td>
-                  <td className='text-secondary-empahasis'>{formatDate(permission.createdAt)}</td>
-                  <td className='text-secondary-empahasis'>{formatDate(showDeleted ? permission.deletedAt : permission.updatedAt)}</td>
+                  <td className='text-secondary-emphasis'>{permission.name}</td>
+                  <td className='text-secondary-emphasis'>{permission.description}</td>
+                  <td className='text-secondary-emphasis'>{formatDate(permission.createdAt)}</td>
+                  <td className='text-secondary-emphasis'>{formatDate(showDeleted ? permission.deletedAt : permission.updatedAt)}</td>
                   <td>
                     <ButtonGroup>
                       {!showDeleted && (
