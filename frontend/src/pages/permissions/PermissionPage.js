@@ -95,7 +95,7 @@ function PermissionPage() {
       return;
     }
     setDeleteId(id);
-    setSelectedPermission({ id, name, description: '' });
+    setSelectedPermission({ id, name});
     setShowConfirmDeleteModal(true);
   };
 

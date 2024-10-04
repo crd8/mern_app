@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import axios from 'axios';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import { Button, Container, Form, Spinner, Table, Toast, ToggleButton, ToggleButtonGroup } from 'react-bootstrap'
+import { Button, ButtonGroup, Container, Form, OverlayTrigger, Pagination, Spinner, Table, Toast, ToggleButton, ToggleButtonGroup, Tooltip } from 'react-bootstrap'
 import { format } from 'date-fns';
 import { enUS } from 'date-fns/locale';
-import { BsDatabaseCheck, BsDatabaseX } from 'react-icons/bs';
+import { BsArchive, BsDatabaseCheck, BsDatabaseX } from 'react-icons/bs';
+import ConfirmDeleteModal from '../../components/employees/ConfirmDeleteModal';
 
 function EmployeePage() {
   const [employees, setEmployees] = useState([]);
@@ -15,7 +16,12 @@ function EmployeePage() {
   const [showDeleted, setShowDeleted] = useState(false);
 
   const [loading, setLoading] = useState(false);
-  const [notification, setNotification] = useState(false);
+  const [notification, setNotification] = useState(null);
+
+  const [selectedEmployee, setSelectedEmployee] = useState(null);
+
+  const [deleteId, setDeleteId] = useState('');
+  const [showConfirmDeleteModal, setShowConfirmDeleteModal] = useState(false);
 
   const fetchEmployees = useCallback(async () => {
     setLoading(true);
@@ -57,9 +63,40 @@ function EmployeePage() {
     return format(date, "dd MMMM yyyy", { locale: enUS });
   }
 
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  }
+
+  const showDeleteConfirmModal = (id, fullname) => {
+    if (!id) {
+      console.error('Invalid employee ID for deletion');
+      return;
+    }
+    setDeleteId(id);
+    setSelectedEmployee({ id, fullname });
+    setShowConfirmDeleteModal(true);
+  };
+
+  const handleDelete = async (id) => {
+    setLoading(true);
+    try {
+      const response = await axios.delete(`http://localhost:5000/api/employees/${id}`);
+      if (response.status !== 200) throw new Error(`Http error! status: ${response.status}`);
+
+      fetchEmployees();
+      setShowConfirmDeleteModal(false);
+      setNotification({ type: 'success', message: 'Employee successfully deleted' });
+    } catch (error) {
+      console.error('Error deleting employee: ', error.message);
+      setNotification({ type: 'error', message: `Failed to delete employee: ${error.message}` });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <Container>
-      {Notification && (
+    <Container className='pt-4'>
+      {notification && (
         <Toast
           onClose={() => setNotification(null)}
           autohide
@@ -159,12 +196,40 @@ function EmployeePage() {
                   <td className='text-secondary-emphasis'>{formatDate(employee.date_of_birth)}</td>
                   <td className='text-secondary-emphasis'>{formatDate(employee.hire_date)}</td>
                   <td className='text-secondary-emphasis'>{employee.employee_status}</td>
+                  <td>
+                    <ButtonGroup>
+                      {!showDeleted && (
+                        <OverlayTrigger placement='top' overlay={<Tooltip>Archive</Tooltip>}>
+                          <Button variant='link' onClick={() => showDeleteConfirmModal(employee.id, employee.fullname)}><BsArchive/></Button>
+                        </OverlayTrigger>
+                      )}
+                    </ButtonGroup>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </Table>
+          <Pagination className='mt-3'>
+            {Array.from({ length: totalPages }, (_, i) => (
+              <Pagination.Item
+                key={i + 1}
+                active={i + 1 === currentPage}
+                onClick={() => handlePageChange}
+              >
+                {i + 1}
+              </Pagination.Item>
+            ))}
+          </Pagination>
         </>
       )}
+
+      <ConfirmDeleteModal
+        show={showConfirmDeleteModal}
+        handleClose={() => setShowConfirmDeleteModal(false)}
+        handleDelete={handleDelete}
+        employeeId={deleteId}
+        employeeName={selectedEmployee?.fullname || ''}
+      />
     </Container>
   )
 }
