@@ -4,8 +4,9 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import { Button, ButtonGroup, Container, Form, OverlayTrigger, Pagination, Spinner, Table, Toast, ToggleButton, ToggleButtonGroup, Tooltip } from 'react-bootstrap'
 import { format } from 'date-fns';
 import { enUS } from 'date-fns/locale';
-import { BsArchive, BsDatabaseCheck, BsDatabaseX } from 'react-icons/bs';
+import { BsArchive, BsArrowRepeat, BsDatabaseCheck, BsDatabaseX } from 'react-icons/bs';
 import ConfirmDeleteModal from '../../components/employees/ConfirmDeleteModal';
+import ConfirmRestoreModal from '../../components/employees/ConfirmRestoreModal';
 
 function EmployeePage() {
   const [employees, setEmployees] = useState([]);
@@ -22,6 +23,9 @@ function EmployeePage() {
 
   const [deleteId, setDeleteId] = useState('');
   const [showConfirmDeleteModal, setShowConfirmDeleteModal] = useState(false);
+
+  const [restoreId, setRestoreId] = useState('');
+  const [showConfirmRestoreModal, setShowConfirmRestoreModal] = useState(false);
 
   const fetchEmployees = useCallback(async () => {
     setLoading(true);
@@ -93,6 +97,30 @@ function EmployeePage() {
       setLoading(false);
     }
   };
+
+  const showRestoreConfirmModal = (id, fullname) => {
+    if (!id) {
+      console.error('Invalid employee ID for restoring');
+      return;
+    }
+    setRestoreId(id);
+    setSelectedEmployee({ id, fullname });
+    setShowConfirmRestoreModal(true);
+  };
+
+  const handleRestore = async (id) => {
+    setLoading(true);
+
+    try {
+      const response = await axios.put(`http://localhost:5000/api/employees/${id}/restore`);
+      if (response.status !== 200) throw new Error(`HTTP error! status: ${response.status}`);
+      fetchEmployees();
+      setShowConfirmRestoreModal(false);
+      setNotification({ type: 'success', message: 'Employee successfully restored' });
+    } catch (error) {
+
+    }
+  }
 
   return (
     <Container className='pt-4'>
@@ -203,6 +231,13 @@ function EmployeePage() {
                           <Button variant='link' onClick={() => showDeleteConfirmModal(employee.id, employee.fullname)}><BsArchive/></Button>
                         </OverlayTrigger>
                       )}
+                      {showDeleted && (
+                        <OverlayTrigger placement='top' overlay={<Tooltip>Restore</Tooltip>}>
+                          <Button variant='link' onClick={() => showRestoreConfirmModal(employee.id, employee.fullname)}>
+                            <BsArrowRepeat/>
+                          </Button>
+                        </OverlayTrigger>
+                      )}
                     </ButtonGroup>
                   </td>
                 </tr>
@@ -228,6 +263,14 @@ function EmployeePage() {
         handleClose={() => setShowConfirmDeleteModal(false)}
         handleDelete={handleDelete}
         employeeId={deleteId}
+        employeeName={selectedEmployee?.fullname || ''}
+      />
+
+      <ConfirmRestoreModal
+        show={showConfirmRestoreModal}
+        handleClose={() => setShowConfirmRestoreModal(false)}
+        handleRestore={handleRestore}
+        employeeId={restoreId}
         employeeName={selectedEmployee?.fullname || ''}
       />
     </Container>
