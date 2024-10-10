@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { Alert, Modal, Form, Button } from 'react-bootstrap';
+import axios from 'axios';
 
 const PermissionModal = ({ permission, show, handleClose, handleSave }) => {
   const [name, setName] = useState('');
@@ -8,6 +9,21 @@ const PermissionModal = ({ permission, show, handleClose, handleSave }) => {
   const [isSaveDisabled, setIsSaveDisabled] = useState(true);
   const [errors, setErrors] = useState({});
   const [saveError, setSaveError] = useState('');
+  const [existingNames, setExistingNames] = useState([]);
+
+  const refreshExistingNames = async () => {
+    try {
+      const response = await axios.get('http://localhost:5000/api/permissions');
+      const names = response.data.data.map(permission => permission.name);
+      setExistingNames(names); // Memperbarui state existingNames
+    } catch (error) {
+      console.error('Error fetching existing names: ', error);
+    }
+  };
+
+  useEffect(() => {
+    refreshExistingNames(); // Memanggil fungsi ini saat modal dibuka
+  }, [show]); // Hanya ketika modal ditampilkan
 
   useEffect(() => {
     if (permission) {
@@ -23,8 +39,8 @@ const PermissionModal = ({ permission, show, handleClose, handleSave }) => {
     const isUnchanged = permission && name === permission.name && description === permission.description;
     const isFormIncomplete = !name.trim() || !description.trim();
 
-    setIsSaveDisabled(isUnchanged || isFormIncomplete);
-  }, [name, description, permission]);
+    setIsSaveDisabled(isUnchanged || isFormIncomplete || !!errors.name);
+  }, [name, description, permission, errors]);
 
   const onModalClose = () => {
     setName('');
@@ -38,16 +54,38 @@ const PermissionModal = ({ permission, show, handleClose, handleSave }) => {
     let tempErrors = {};
     
     if (!name) tempErrors.name = 'Name is required';
+    if (existingNames.includes(name)) tempErrors.name = 'Name already exists';
     if (!description) tempErrors.description = 'Description is required';
     setErrors(tempErrors);
     return Object.keys(tempErrors).length === 0;
   }
 
+  const onNameChange = (e) => {
+    const newName = e.target.value;
+    setName(newName);
+    
+    // Validasi nama saat user mengetik
+    if (existingNames.includes(newName)) {
+      setErrors(prevErrors => ({ ...prevErrors, name: 'Name already exists' }));
+    } else {
+      setErrors(prevErrors => ({ ...prevErrors, name: undefined }));
+    }
+  };
+
   const onSave = async () => {
-    setSaveError('');
+    setSaveError(''); 
     if (validate()) {
       try {
         await handleSave({ id: permission?.id, name, description });
+
+        // Hapus nama lama jika ada
+        if (permission) {
+          setExistingNames((prevNames) => 
+            prevNames.filter(existingName => existingName !== permission.name)
+          );
+        }
+        
+        setExistingNames((prevNames) => [...prevNames, name]);
         setName('');
         setDescription('');
         handleClose();
@@ -77,7 +115,7 @@ const PermissionModal = ({ permission, show, handleClose, handleSave }) => {
             <Form.Control
               type='text'
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={onNameChange}
               isInvalid={!!errors.name}
               autoFocus
               required
@@ -123,6 +161,7 @@ PermissionModal.propTypes = {
     name: PropTypes.string,
     description: PropTypes.string,
   }),
+  existingNames: PropTypes.arrayOf(PropTypes.string),
 };
 
 export default PermissionModal;
