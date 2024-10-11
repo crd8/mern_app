@@ -1,7 +1,10 @@
 const { Permission } = require('../models');
 const { Op } = require('sequelize');
 
-exports.getPermissions = async ({ page = 1, pageSize = 10, search = '' }) => {
+// Mengambil semua permissions dengan opsi paranoid.
+// Jika paranoid: true, hanya akan mengambil data yang belum dihapus (aktif).
+// Jika paranoid: false, akan mengambil semua data termasuk yang di-soft delete.
+exports.getPermissions = async ({ page = 1, pageSize = 10, search = '', paranoid = true }) => {
   const pageNum = parseInt(page, 10);
   const size = parseInt(pageSize, 10);
   if (isNaN(pageNum) || pageNum <= 0) throw new Error('Invalid page number');
@@ -20,6 +23,7 @@ exports.getPermissions = async ({ page = 1, pageSize = 10, search = '' }) => {
       limit: size,
       offset: offset,
       order: [['createdAt', 'DESC']],
+      paranoid: paranoid
     });
 
     return {

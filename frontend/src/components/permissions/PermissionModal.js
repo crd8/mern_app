@@ -11,9 +11,13 @@ const PermissionModal = ({ permission, show, handleClose, handleSave }) => {
   const [saveError, setSaveError] = useState('');
   const [existingNames, setExistingNames] = useState([]);
 
+  // Endpoint untuk mendapatkan permissions.
+  // Menyediakan parameter query 'paranoid' untuk mengontrol pengambilan data
+  // - Jika 'paranoid=false', akan mengambil semua data termasuk yang sudah dihapus.
+  // - Jika 'paranoid=true' (default), hanya mengambil data aktif.
   const refreshExistingNames = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/permissions');
+      const response = await axios.get('http://localhost:5000/api/permissions?paranoid=false');
       const names = response.data.data.map(permission => permission.name);
       setExistingNames(names); // Memperbarui state existingNames
     } catch (error) {
@@ -54,7 +58,11 @@ const PermissionModal = ({ permission, show, handleClose, handleSave }) => {
     let tempErrors = {};
     
     if (!name) tempErrors.name = 'Name is required';
-    if (existingNames.includes(name)) tempErrors.name = 'Name already exists';
+    // tanpa lower dan uppercase validate
+    // if (existingNames.includes(name)) tempErrors.name = 'Name already exists';
+    if (existingNames.map(n => n.toLowerCase()).includes(name.toLowerCase())) {
+      tempErrors.name = 'Name already exists';
+    }
     if (!description) tempErrors.description = 'Description is required';
     setErrors(tempErrors);
     return Object.keys(tempErrors).length === 0;
@@ -65,7 +73,7 @@ const PermissionModal = ({ permission, show, handleClose, handleSave }) => {
     setName(newName);
     
     // Validasi nama saat user mengetik
-    if (existingNames.includes(newName)) {
+    if (existingNames.map(n => n.toLowerCase()).includes(newName.toLowerCase())) {
       setErrors(prevErrors => ({ ...prevErrors, name: 'Name already exists' }));
     } else {
       setErrors(prevErrors => ({ ...prevErrors, name: undefined }));
