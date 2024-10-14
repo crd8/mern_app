@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import PropTypes from "prop-types";
 import { Modal, Button, Form, Alert } from 'react-bootstrap';
+import axios from 'axios';
 
 const DepartmentModal = ({ show, handleClose, handleSave, department }) => { // objek props yang diterima oleh komponen
   // State untuk menyimpan nilai form
@@ -9,6 +10,25 @@ const DepartmentModal = ({ show, handleClose, handleSave, department }) => { // 
   const [errors, setErrors] = useState({});
   const [saveError, setSaveError] = useState('');
   const [isSaveDisabled, setIsSaveDisabled] = useState(true);
+  const [existingNames, setExistingNames] = useState([]);
+
+  // Endpoint untuk mendapatkan permissions.
+  // Menyediakan parameter query 'paranoid' untuk mengontrol pengambilan data
+  // - Jika 'paranoid=false', akan mengambil semua data termasuk yang sudah dihapus.
+  // - Jika 'paranoid=true' (default), hanya mengambil data aktif.
+  const refreshExistingNames = async () => {
+    try {
+      const response = await axios.get('http://localhost:5000/api/departments?paranoid=false');
+      const names = response.data.data.map(department => department.name);
+      setExistingNames(names); // memperbarui state existingNames
+    } catch (error) {
+      console.error('Error fetching existing names: ', error)
+    }
+  };
+
+  useEffect(() => {
+    refreshExistingNames(); // memanggil fungsi refreshexistingnames saat modal dibuka
+  }, [show]); // hanya ketika modal ditampilkan
 
   // untuk mengatur nilai form ketika 'department' berubah
   useEffect(() => {
@@ -28,16 +48,34 @@ const DepartmentModal = ({ show, handleClose, handleSave, department }) => { // 
     const isFormIncomplete = !name.trim() || !description.trim();
 
     // Menonaktifkan tombol save jika data tidak berubah atau form tidak lengkap
-    setIsSaveDisabled(isUnchanged || isFormIncomplete);
-  }, [name, description, department]);
+    setIsSaveDisabled(isUnchanged || isFormIncomplete || !!errors.name);
+  }, [name, description, department, errors]);
 
   // Fungsi untuk validasi form
   const validate = () => {
     let tempErrors = {};
+
     if (!name) tempErrors.name = 'Name is required'; // Pesan kesalahan jika nama kosong
+    // tanpa lower dan uppercase validate
+    // if (existingNames.includes(name)) tempErrors.name = 'Name already exists';
+    if (existingNames.map(n => n.toLowerCase()).includes(name.toLowerCase())) {
+      tempErrors.name = 'Name already exists';
+    }
     if (!description) tempErrors.description = 'Description is required'; // Pesan kesalahan jika desc kosong
     setErrors(tempErrors); // Menyimpan pesan kesalahan
     return Object.keys(tempErrors).length === 0; // Mengembalikan true jika tidak ada kesalahan
+  };
+
+  const onNameChange = (e) => {
+    const newName = e.target.value;
+    setName(newName);
+
+    // validasi nama saat user typing
+    if (existingNames.map(n => n.toLowerCase()).includes(newName.toLowerCase())) {
+      setErrors(prevErrors => ({ ...prevErrors, name: 'Name already exists'}));
+    } else {
+      setErrors(prevErrors => ({ ...prevErrors, name: undefined }));
+    }
   };
 
   // Fungsi untuk menyimpan data departemen
@@ -47,6 +85,14 @@ const DepartmentModal = ({ show, handleClose, handleSave, department }) => { // 
       try {
         // Menyimpan data departemen
         await handleSave({ id: department?.id, name, description });
+
+        // hapus nama lain jika ada
+        if (department) {
+          setExistingNames((prevNames) =>
+            prevNames.filter(existingNames => existingNames !== department.name)
+          );
+        }
+        setExistingNames((prevNames) => [...prevNames, name]);
         // Reset form setelah berhasil menyimpan
         setName('');
         setDescription('');
@@ -86,7 +132,7 @@ const DepartmentModal = ({ show, handleClose, handleSave, department }) => { // 
             <Form.Control
               type='text'
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={onNameChange}
               isInvalid={!!errors.name}
               autoFocus
               required
@@ -133,6 +179,7 @@ DepartmentModal.propTypes = {
     name: PropTypes.string,
     description: PropTypes.string,
   }),
+  existingNames: PropTypes.arrayOf(PropTypes.string),
 };
 
 export default DepartmentModal;

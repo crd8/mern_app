@@ -1,10 +1,14 @@
 const departmentService = require('../services/departmentService');
 
+// Controller untuk mengambil semua permissions
+// Mengambil parameter 'paranoid' dari query untuk menentukan
+// apakah ingin menyertakan data yang telah dihapus (soft delete).
+// Defaultnya adalah true, yang berarti hanya data aktif yang diambil.
 exports.getAllDepartments = async (req, res) => {
   try {
     // Validasi parameter query
-    const { page = 1, pageSize = 10, search = '' } = req.query;
-    const departments = await departmentService.getDepartments({ page, pageSize, search });
+    const { page = 1, pageSize = 10, search = '', paranoid = true } = req.query;
+    const departments = await departmentService.getDepartments({ page, pageSize, search, paranoid: paranoid === 'false' ? false : true });
     res.json(departments); // Mengembalikan data sebagai JSON
   } catch (error) {
     console.error('Error in getAllDepartments:', error); // Logging kesalahan

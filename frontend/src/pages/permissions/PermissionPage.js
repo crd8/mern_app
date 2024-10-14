@@ -393,7 +393,6 @@ function PermissionPage() {
         handleClose={() => setShowModal(false)}
         handleSave={handleSave}
         permission={selectedPermission}
-        existingNames={['name1', 'name2', 'name3']}
       />
 
       <ConfirmDeleteModal

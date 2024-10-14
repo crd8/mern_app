@@ -1,8 +1,10 @@
 const { Department } = require('../models');
 const { Op } = require('sequelize');
 
-// mengambil data department yang active
-exports.getDepartments = async ({ page = 1, pageSize = 10, search = '' }) => { // parameter paginasi dan pencarian
+// Mengambil semua permissions dengan opsi paranoid.
+// Jika paranoid: true, hanya akan mengambil data yang belum dihapus (aktif).
+// Jika paranoid: false, akan mengambil semua data termasuk yang di-soft delete.
+exports.getDepartments = async ({ page = 1, pageSize = 10, search = '', paranoid = true }) => { // parameter paginasi dan pencarian dan parameter paranoid, jika true hanya untuk data aktif, bila false maka semuad ata termasuk softdelete
   // valiasi input untuk memastikan halaman dan ukuran halaman adalah angka valid dan positif
   const pageNum = parseInt(page, 10);
   const size = parseInt(pageSize, 10);
@@ -26,6 +28,7 @@ exports.getDepartments = async ({ page = 1, pageSize = 10, search = '' }) => { /
       limit: size, // mengatur batas jumlah data per halaman
       offset: offset, // mengatur data yang akan dilewati
       order: [['createdAt', 'DESC']], // mengurutkan hasil berdasarkan tanggal createdAt
+      paranoid: paranoid
     });
     
     // mengembalikan data dengan informasi paginasi
