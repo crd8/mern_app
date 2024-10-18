@@ -3,8 +3,7 @@ import PropTypes from "prop-types";
 import { Modal, Button, Form, Alert } from 'react-bootstrap';
 import axios from 'axios';
 
-const DepartmentModal = ({ show, handleClose, handleSave, department }) => { // objek props yang diterima oleh komponen
-  // State untuk menyimpan nilai form
+const DepartmentModal = ({ show, handleClose, handleSave, department }) => {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [errors, setErrors] = useState({});
@@ -12,25 +11,20 @@ const DepartmentModal = ({ show, handleClose, handleSave, department }) => { // 
   const [isSaveDisabled, setIsSaveDisabled] = useState(true);
   const [existingNames, setExistingNames] = useState([]);
 
-  // Endpoint untuk mendapatkan permissions.
-  // Menyediakan parameter query 'paranoid' untuk mengontrol pengambilan data
-  // - Jika 'paranoid=false', akan mengambil semua data termasuk yang sudah dihapus.
-  // - Jika 'paranoid=true' (default), hanya mengambil data aktif.
   const refreshExistingNames = async () => {
     try {
       const response = await axios.get('http://localhost:5000/api/departments?paranoid=false');
       const names = response.data.data.map(department => department.name);
-      setExistingNames(names); // memperbarui state existingNames
+      setExistingNames(names);
     } catch (error) {
       console.error('Error fetching existing names: ', error)
     }
   };
 
   useEffect(() => {
-    refreshExistingNames(); // memanggil fungsi refreshexistingnames saat modal dibuka
-  }, [show]); // hanya ketika modal ditampilkan
+    refreshExistingNames();
+  }, [show]);
 
-  // untuk mengatur nilai form ketika 'department' berubah
   useEffect(() => {
     if (department) {
       setName(department.name || '');
@@ -41,36 +35,37 @@ const DepartmentModal = ({ show, handleClose, handleSave, department }) => { // 
     }
   }, [department, show]);
 
-  // untuk mengatur status tombol save
   useEffect(() => {
-    // Cek apakah data tidak berubah atau form tidak lengkap
     const isUnchanged = department && name === department.name && description === department.description;
     const isFormIncomplete = !name.trim() || !description.trim();
 
-    // Menonaktifkan tombol save jika data tidak berubah atau form tidak lengkap
     setIsSaveDisabled(isUnchanged || isFormIncomplete || !!errors.name);
   }, [name, description, department, errors]);
 
-  // Fungsi untuk validasi form
-  const validate = () => {
+  const validate = (isUpdate = false) => {
     let tempErrors = {};
 
-    if (!name) tempErrors.name = 'Name is required'; // Pesan kesalahan jika nama kosong
-    // tanpa lower dan uppercase validate
-    // if (existingNames.includes(name)) tempErrors.name = 'Name already exists';
-    if (existingNames.map(n => n.toLowerCase()).includes(name.toLowerCase())) {
+    if (!name.trim()) tempErrors.name = 'Name is required';
+    if (!isUpdate && existingNames.map(n => n.toLowerCase()).includes(name.trim().toLowerCase())) {
       tempErrors.name = 'Name already exists';
     }
-    if (!description) tempErrors.description = 'Description is required'; // Pesan kesalahan jika desc kosong
-    setErrors(tempErrors); // Menyimpan pesan kesalahan
-    return Object.keys(tempErrors).length === 0; // Mengembalikan true jika tidak ada kesalahan
+
+    if (!description.trim()) tempErrors.description = 'Description is required';
+    setErrors(tempErrors);
+    return Object.keys(tempErrors).length === 0;
   };
 
   const onNameChange = (e) => {
     const newName = e.target.value;
+    
+    if (newName.toLowerCase() === department?.name.toLowerCase()) {
+      setName(newName);
+      setErrors(prevErrors => ({ ...prevErrors, name: undefined })); // Pastikan tidak ada error
+      return;
+    }
+
     setName(newName);
 
-    // validasi nama saat user typing
     if (existingNames.map(n => n.toLowerCase()).includes(newName.toLowerCase())) {
       setErrors(prevErrors => ({ ...prevErrors, name: 'Name already exists'}));
     } else {
@@ -78,39 +73,34 @@ const DepartmentModal = ({ show, handleClose, handleSave, department }) => { // 
     }
   };
 
-  // Fungsi untuk menyimpan data departemen
   const onSave = async () => {
-    setSaveError(''); // Reset pesan kesalahan simpan
-    if (validate()) { // Validasi form
+    setSaveError('');
+    if (validate(department !== null)) {
       try {
-        // Menyimpan data departemen
-        await handleSave({ id: department?.id, name, description });
-
-        // hapus nama lain jika ada
+        await handleSave({ id: department?.id, name: name.trim(), description: description.trim() });
+        
         if (department) {
           setExistingNames((prevNames) =>
             prevNames.filter(existingNames => existingNames !== department.name)
           );
         }
-        setExistingNames((prevNames) => [...prevNames, name]);
-        // Reset form setelah berhasil menyimpan
+        setExistingNames((prevNames) => [...prevNames, name.trim()]);
         setName('');
         setDescription('');
-        handleClose(); // Menutup modal
+        handleClose();
       } catch (error) {
-        console.error('Failed to save:', error); // Menampilkan kesalahan di console
-        setSaveError('Failed to save department. Please try again.'); // Pesan kesalahan simpan
+        console.error('Failed to save:', error);
+        setSaveError('Failed to save department. Please try again.');
       }
     }
   };
 
-  // Fungsi untuk menutup modal
   const onModalClose = () => {
     setName('');
     setDescription('');
     setErrors({});
     setSaveError('');
-    handleClose(); // Menutup modal
+    handleClose();
   };
 
   return (
@@ -169,7 +159,6 @@ const DepartmentModal = ({ show, handleClose, handleSave, department }) => { // 
   );
 };
 
-// Menentukan tipe properti yang diterima komponen ini
 DepartmentModal.propTypes = {
   show: PropTypes.bool.isRequired,
   handleClose: PropTypes.func.isRequired,

@@ -86,16 +86,16 @@ exports.getPermissionById = async (id) => {
 };
 
 exports.createPermission = async ({ name, description }) => {
-  if (!name) throw new Error('Permission name is required');
-  if (!description) throw new Error('Permission decription is required');
+  if (!name.trim()) throw new Error('Permission name is required');
+  if (!description.trim()) throw new Error('Permission decription is required');
 
   try {
-    const existingNamePermission = await Permission.findOne({ where: { name } });
+    const existingNamePermission = await Permission.findOne({ where: { name: name.trim() } });
     if (existingNamePermission) {
       throw new Error('Permission name already exists');
     }
 
-    const newPermission = await Permission.create({ name, description });
+    const newPermission = await Permission.create({ name: name.trim(), description: description.trim() });
     return newPermission;
   } catch (error) {
     console.error('Error creating permission: ', error.message);

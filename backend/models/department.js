@@ -13,30 +13,30 @@ module.exports = (sequelize, DataTypes) => {
       // define association here
     }
   }
-  // inisialisasi model department dengan atribut dan opsi terkait
+
   Department.init({
     id: {
-      type: DataTypes.UUID, // tipe data UUID untuk primary key
-      defaultValue: DataTypes.UUIDV4, // default value adalah UUIDV4
-      primaryKey: true // menandakan sebagai primary key
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
+      primaryKey: true
     },
 
     name: {
-      type: DataTypes.STRING, // tipe data string
-      allowNull: false, // tidak boleh null, wajib diisi
-      unique: true // harus unik, tidak boleh duplikat
+      type: DataTypes.STRING,
+      allowNull: false,
+      unique: true
     },
 
     description: {
-      type: DataTypes.STRING, // tipe data string
-      allowNull: false // tidak boleh null, wajib diisi
+      type: DataTypes.STRING,
+      allowNull: false
     },
   }, {
-    sequelize, // instance Sequelize yang digunakan
-    modelName: 'Department', // nama model
-    timestamps: true, // mengaktifkan kolom createdAt dan updatedAt secara otomatis
-    paranoid: true, // mengaktifkan softdelete dengan kolom deletedAt
+    sequelize,
+    modelName: 'Department',
+    timestamps: true,
+    paranoid: true,
   });
 
-  return Department; // mengembalikan model department
+  return Department;
 };

@@ -1,9 +1,9 @@
 'use strict';
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
-  // up digunakan untuk melakukan migrasi
+
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('Departments', { // perintah untuk membuat tabel baru di db dengan nama Departments
+    await queryInterface.createTable('Departments', {
       id: {
         allowNull: false,
         primaryKey: true,
@@ -15,10 +15,10 @@ module.exports = {
         type: Sequelize.STRING,
         allowNull: false,
         unique: true,
-        // menambahkan properti validate, untuk validasi
+      
         validate: {
-          notEmpty: true, // tidak boleh kosong
-          len: [2, 100] // panjang minimal 2 karakter dan maksimal 100 karakter
+          notEmpty: true,
+          len: [2, 100]
         }
       },
 
@@ -30,13 +30,13 @@ module.exports = {
       createdAt: {
         type: Sequelize.DATE,
         allowNull: false,
-        defaultValue: Sequelize.NOW // mengatur dfault waktu sekarang saat record dibuat
+        defaultValue: Sequelize.NOW
       },
 
       updatedAt: {
         type: Sequelize.DATE,
         allowNull: false,
-        defaultValue: Sequelize.NOW // mengatur dfault waktu sekarang saat record diperbarui
+        defaultValue: Sequelize.NOW
       },
 
       deletedAt: {
@@ -45,7 +45,7 @@ module.exports = {
       },
     });
   },
-  // down digunakan untuk membatalkan migrasi
+
   async down(queryInterface, Sequelize) {
     await queryInterface.dropTable('Departments');
   }

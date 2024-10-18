@@ -6,9 +6,11 @@ import axios from 'axios';
 const PermissionModal = ({ permission, show, handleClose, handleSave }) => {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
+
   const [isSaveDisabled, setIsSaveDisabled] = useState(true);
   const [errors, setErrors] = useState({});
   const [saveError, setSaveError] = useState('');
+  
   const [existingNames, setExistingNames] = useState([]);
 
   // Endpoint untuk mendapatkan permissions.
@@ -54,13 +56,12 @@ const PermissionModal = ({ permission, show, handleClose, handleSave }) => {
     handleClose();
   }
 
-  const validate = () => {
+  const validate = (isUpdate = false) => {
     let tempErrors = {};
     
-    if (!name) tempErrors.name = 'Name is required';
-    // tanpa lower dan uppercase validate
-    // if (existingNames.includes(name)) tempErrors.name = 'Name already exists';
-    if (existingNames.map(n => n.toLowerCase()).includes(name.toLowerCase())) {
+    if (!name.trim()) tempErrors.name = 'Name is required';
+  
+    if (!isUpdate && existingNames.map(n => n.toLowerCase()).includes(name.toLowerCase())) {
       tempErrors.name = 'Name already exists';
     }
     if (!description) tempErrors.description = 'Description is required';
@@ -70,10 +71,19 @@ const PermissionModal = ({ permission, show, handleClose, handleSave }) => {
 
   const onNameChange = (e) => {
     const newName = e.target.value;
+
+    if (newName.toLowerCase() === permission?.name.toLowerCase()) {
+      setName(newName);
+      setErrors(prevErrors => ({ ...prevErrors, name: undefined }));
+      return;
+    }
+
     setName(newName);
     
     // Validasi nama saat user mengetik
-    if (existingNames.map(n => n.toLowerCase()).includes(newName.toLowerCase())) {
+    if (!newName) {
+      setErrors(prevErrors => ({ ...prevErrors, name: 'Name is required' }));
+    } else if (existingNames.map(n => n.toLowerCase()).includes(newName.toLowerCase())) {
       setErrors(prevErrors => ({ ...prevErrors, name: 'Name already exists' }));
     } else {
       setErrors(prevErrors => ({ ...prevErrors, name: undefined }));
@@ -82,11 +92,10 @@ const PermissionModal = ({ permission, show, handleClose, handleSave }) => {
 
   const onSave = async () => {
     setSaveError(''); 
-    if (validate()) {
+    if (validate(permission !== null)) {
       try {
         await handleSave({ id: permission?.id, name, description });
 
-        // Hapus nama lama jika ada
         if (permission) {
           setExistingNames((prevNames) => 
             prevNames.filter(existingName => existingName !== permission.name)

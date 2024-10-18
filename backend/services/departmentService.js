@@ -1,227 +1,199 @@
 const { Department } = require('../models');
 const { Op } = require('sequelize');
+const logger = require('../utils/logger');
+const { stack } = require('sequelize/lib/utils');
 
-// Mengambil semua permissions dengan opsi paranoid.
-// Jika paranoid: true, hanya akan mengambil data yang belum dihapus (aktif).
-// Jika paranoid: false, akan mengambil semua data termasuk yang di-soft delete.
-exports.getDepartments = async ({ page = 1, pageSize = 10, search = '', paranoid = true }) => { // parameter paginasi dan pencarian dan parameter paranoid, jika true hanya untuk data aktif, bila false maka semuad ata termasuk softdelete
-  // valiasi input untuk memastikan halaman dan ukuran halaman adalah angka valid dan positif
+exports.getDepartments = async ({ page = 1, pageSize = 10, search = '', paranoid = true }) => {
   const pageNum = parseInt(page, 10);
   const size = parseInt(pageSize, 10);
-  if (isNaN(pageNum) || pageNum <= 0) throw new Error('Invalid page number');
-  if (isNaN(size) || size <= 0) throw new Error('Invalid page size');
-
-  // menghitung offset untuk paginasi
-  const offset = (pageNum - 1) * size;
   
-  // menggunakan try-catch untuk menangani kemungkinan kesalahan yang terjadi
-  // selama proses pengembalian, pembaruan, penghapusan
+  if (isNaN(pageNum) || pageNum <= 0) throw { message: 'Invalid page number', statusCode: 400 };
+  if (isNaN(size) || size <= 0) throw { message: 'Invalid page size', statusCode: 400}
+
+  const offset = (pageNum - 1) * size;
   try {
-    // mengambil data dan jumlah total department berdasarkan kondisi pencarian
+  
     const { count, rows } = await Department.findAndCountAll({
       where: {
         [Op.or]: [
-          { name: { [Op.like]: `%${search}%` } }, // mencari berdasarkan nama
-          { description: { [Op.like]: `%${search}%` } }, // mencari berdasarkan deskripsi
+          { name: { [Op.like]: `%${search}%` } },
+          { description: { [Op.like]: `%${search}%` } },
         ],
       },
-      limit: size, // mengatur batas jumlah data per halaman
-      offset: offset, // mengatur data yang akan dilewati
-      order: [['createdAt', 'DESC']], // mengurutkan hasil berdasarkan tanggal createdAt
+      limit: size,
+      offset: offset,
+      order: [['createdAt', 'DESC']],
       paranoid: paranoid
     });
     
-    // mengembalikan data dengan informasi paginasi
     return {
       data: rows,
-      totalPages: Math.ceil(count / size), // menghitung total halaman
-      currentPage: pageNum, // halaman saat ini
+      totalPages: Math.ceil(count / size),
+      currentPage: pageNum,
     };
   } catch (error) {
-    throw new Error('Error retrieving departments: ' + error.message); // menangani kesalahan
+    logger.error('Error retrieving departments: ', error.message);
+    throw { message: 'Error retrieving departments', statusCode: 500 };
   }
 };
 
-// mengambil data department yang non aktif atau softdelete
-exports.getDeletedDepartments = async ({ page = 1, pageSize = 10, search = '' }) => { // parameter paginasi dan pencarian
-  // valiasi input untuk memastikan halaman dan ukuran halaman adalah angka valid dan positif
+exports.getDeletedDepartments = async ({ page = 1, pageSize = 10, search = '' }) => {
   const pageNum = parseInt(page, 10);
   const size = parseInt(pageSize, 10);
-  if (isNaN(pageNum) || pageNum <= 0) throw new Error('Invalid page number');
-  if (isNaN(size) || size <= 0) throw new Error('Invalid page size');
 
-  // menghitung offset untuk paginasi
+  if (isNaN(pageNum) || pageNum <= 0) throw { message: 'Invalid page number', statusCode: 400 };
+  if (isNaN(size) || size <= 0) throw { message: 'Invalid page size', statusCode: 400 };
+
   const offset = (pageNum - 1) * size;
 
-  // menggunakan try-catch untuk menangani kemungkinan kesalahan yang terjadi
-  // selama proses pengembalian, pembaruan, penghapusan
   try {
-    // mengambil data dan jumlah total department berdasarkan kondisi pencarian
     const { count, rows } = await Department.findAndCountAll({
       where: {
         [Op.and]: [
-          { deletedAt: { [Op.not]: null } }, // Mencari departemen yang dihapus
+          { deletedAt: { [Op.not]: null } },
           {
             [Op.or]: [
-              { name: { [Op.like]: `%${search}%` } }, // mencari berdasarkan nama
-              { description: { [Op.like]: `%${search}%` } }, // mencari berdasarkan deskripsi
+              { name: { [Op.like]: `%${search}%` } },
+              { description: { [Op.like]: `%${search}%` } },
             ]
           }
         ]
       },
-      paranoid: false, // Mengizinkan pencarian pada data yang dihapus
-      limit: size, // mengatur batas jumlah data per halaman
-      offset: offset, // Mengatur data yang akan dilewati
-      order: [['deletedAt', 'DESC']], // Mengurutkan hasil berdasarkan tanggal penghapusan terbaru
+      paranoid: false,
+      limit: size,
+      offset: offset,
+      order: [['deletedAt', 'DESC']],
     });
-
-    // Mengembalikan data dengan informasi paginasi
+  
     return {
       data: rows,
-      totalPages: Math.ceil(count / size), // Menghitung total halaman
-      currentPage: pageNum // Halaman saat ini
+      totalPages: Math.ceil(count / size),
+      currentPage: pageNum
     };
   } catch (error) {
-    throw new Error('Error retrieving deleted departments: ' + error.message);
+    logger.error('Error retrieving deleted departments: ', error.message);
+    throw { message: 'Error retrieving deleted departments', statusCode: 500 };
   }
 };
 
-// Mengambil data departemen berdasarkan ID
 exports.getDepartmentById = async (id) => {
-  if (!id) throw new Error('Department ID is required'); // Validasi ID
-
+  if (!id) throw { message: 'Department ID is required', statusCode: 400 };
   try {
-    // Mengambil data departemen berdasarkan ID
-    const department = await Department.findByPk(id); 
-    if (!department) throw new Error('Department not found'); // Menangani kasus jika tidak ditemukan
+    const department = await Department.findByPk(id);
+    if (!department) throw { message: 'Department not found', statusCode: 404 };
     return department;
   } catch (error) {
-    throw new Error('Error retrieving department: ' + error.message); // Menangani kesalahan
+    if (error.statusCode) {
+      throw error;
+    } else {
+      logger.error('Error retrieving department by ID: ', { message: error.message, stack: error.stack });
+      throw { message: 'Error retrieving department: ' + error.message, statusCode: 500 };
+    }
   }
 };
 
-// Membuat departemen baru
-exports.createDepartment = async ({ name, description}) => {
-  if (!name) throw new Error('Department name is required'); // Validasi nama
-  if (!description) throw new Error('Department description is required'); // Validasi description
 
+
+exports.createDepartment = async ({ name, description}) => {
+  if (!name.trim()) throw { message: 'Department name is required', statusCode: 400 };
+  if (!description.trim()) throw { message: 'Department description is required', statusCode: 400 };
+  
   try {
-    // Memeriksa apakah nama departemen sudah ada
-    const existingNameDepartment  = await Department.findOne({ where: { name } }); // memeriksa apakah nama sudah ada pada db
-    if (existingNameDepartment) {
-      throw new Error('Department name already exists'); // Menangani kasus nama sudah ada
-    }
+    const existingNameDepartment  = await Department.findOne({ where: { name: name.trim() } });
     
-    // Membuat departemen baru
-    const newDepartment = await Department.create({ name, description });
+    if (existingNameDepartment) {
+      throw { message: 'Department name already exists', statusCode: 409 };
+    }
+    const newDepartment = await Department.create({ name: name.trim(), description: description.trim() });
     return newDepartment;
   } catch (error) {
-    console.error('Error creating department:', error.message); // Logging kesalahan
-    throw new Error(error.message); // Menangani kesalahan
-  }
-};
-
-// Memperbarui departemen berdasarkan ID
-exports.updateDepartment = async (id, { name, description }) => {
-  if (!id) throw new Error('Department ID is required'); // validasi ID
-  if (!name) throw new Error('Department name is required'); // validasi name
-  if (!description) throw new Error('Department description is required'); // validasi name
-
-  try {
-    // // Memeriksa apakah nama departemen sudah ada
-    // const existingNameDepartment = await Department.findOne({ where: { name } });
-    // if (existingNameDepartment) {
-    //   throw new Error('Department name already exist'); // Menangani kasus nama sudah ada
-    // }
-
-    // Memperbarui departemen berdasarkan ID
-    const [updated] = await Department.update({ name, description }, { where: { id } });
-    if (updated) {
-      return await Department.findByPk(id); // Mengembalikan data departemen yang diperbarui
+    if (error.statusCode) {
+      throw error;
+    } else {
+      logger.error('Error creating new department: ', { message: error.message, stack: error.stack });
+      throw { message: 'Error creating new department: ' + error.message, statusCode: 500 };
     }
-    throw new Error('Department not found'); // Menangani kasus jika tidak ditemukan
+  }
+};
+
+exports.updateDepartment = async (id, { name, description }) => {
+  if (!id) throw { message: 'Department ID is required', statusCode : 400 };
+  if (!name.trim()) throw { message: 'Department name is required', statusCode: 400 };
+  if (!description.trim()) throw { message: 'Department description is required', statusCode: 400 };
+  try {
+    const [updated] = await Department.update({ name: name.trim(), description: description.trim() }, { where: { id } });
+    if (updated) {
+      return await Department.findByPk(id);
+    }
+    throw { message: 'Department not found', statusCode: 404 };
   } catch (error) {
-    throw new Error('Error updating department: '+ error.message); // Menangani kesalahan
+    logger.error('Error updating department: ', { message: error.message, stack: error.stack });
+    throw { message: 'Error updating department: ' + error.message, statusCode: error.statusCode || 500 };
   }
 };
 
 
-// Menghapus departemen (soft delete)
 exports.deleteDepartment = async (id) => {
-  if (!id) throw new Error('Department ID is required'); // validasi ID
-
+  if (!id) throw { message: 'Department ID is required', statusCode: 400 };
   try {
-    // Menghapus departemen (soft delete) jika paranoid = true di model
     const deleted = await Department.destroy({ where: { id } });
     if (deleted === 0) {
-      return { message: 'Department not found', status: 404 };
+      return { message: 'Department not founda', status: 404 };
     }
     return { message: 'Department deleted', status: 200 };
   } catch (error) {
-    console.error('Error deleting department:', error.message); // Log error untuk debugging
-    throw new Error('Error deleting department: ' + error.message); // Menangani kesalahan
+    logger.error('Error deleting department: ', { message: error.message, stack: error.stack });
+    throw { message: 'Error deleting department: '+ error.message, statusCode: error.statusCode || 500 };
   }
 };
 
-// menghapus department secara batch delete
 exports.batchDeleteDepartments = async (ids) => {
-  console.log('IDs to delete:', ids); // Debugging log
-
-  if (!ids || ids.length === 0) throw new Error('Department IDs are required');
-
+  if (!Array.isArray(ids) || ids.length === 0) {
+    throw { message: 'Department IDs must be an array and cannot be empty', statusCode: 400 };
+  }
   try {
-    // Menghapus departemen (soft delete) jika paranoid = true di model
     const deleted = await Department.destroy({
       where: {
         id: ids,
-        deletedAt: null // Tambahkan kondisi ini untuk memastikan hanya yang belum terhapus yang dihapus
+        deletedAt: null
       }
     });
 
     if (deleted === 0) {
       console.warn('No departments were deleted - possibly already deleted or not found.');
-      return { message: 'No departments were deleted - possibly already deleted or not found.' };
+      return { message: 'No departments were deleted - possibly already deleted or not found.', statusCode: 404 };
     }
-    
-    return { message: 'Selected departments deleted successfully' };
+    return { message: 'Selected departments deleted successfully', statusCode: 200 };
   } catch (error) {
-    console.error('Error deleting departments:', error.message);
-    throw new Error('Error deleting selected departments: ' + error.message);
+    logger.error('Error deleting departments: ', error.message);
+    throw { message: 'Error deleting selected departments' + error.message, statusCode: 500 };
   }
 };
 
-// Menghapus departemen secara permanen (hard delete)
 exports.destroyDepartment = async (id) => {
-  if (!id) throw new Error('Department ID is required'); // validasi ID
-
+  if (!id) throw { message: 'Department ID is required', statusCode: 400 };
   try {
-    // cari department terlebih dahulu
-    const department = await Department.findOne({ where: {id}, paranoid: false });
-    // jika tidak ditemukan, lempar error
-    if (!department) throw new Error('Department not found');
+    const department = await Department.findOne({ where: {id}, paranoid: false }); 
 
-    // Periksa apakah deletedAt sudah terisi
-    if (!department.deletedAt) throw new Error('Department must be soft deleted first');
+    if (!department) throw { message: 'Department not found', statusCode: 404 };
+    if (!department.deletedAt) throw { message: 'Department must be soft deleted first', statusCode: 400 };
 
-    // Menghapus departemen secara permanen
-    const destroyed = await Department.destroy({ where: { id }, force: true }); // menghapus secara hard delete atau permanent
+    const destroyed = await Department.destroy({ where: { id }, force: true });
     return destroyed;
   } catch (error) {
-    console.error('Error permanently deleting department:', error.message);
-    throw new Error(error.message); // Menangani kesalahan
+    logger.error('Error permanently deleting department: ', error.message);
+    throw { message: 'Error permanently deleting department: ' + error.message, statusCode: error.statusCode || 500 };
   }
 };
 
-// memulihkan department yang terhapus (restore)
 exports.restoreDepartment = async (id) => {
-  if (!id) throw new Error('Department ID is required'); // validasi id
-
+  if (!id) throw { message: 'Department ID is required', statusCode: 400 };
   try {
-    // memulihkan department
     const restored = await Department.restore({ where: { id }});
-    if (!restored) throw new Error('Department not found'); // menangani kasus jika ID tidak ditemukan
+    if (!restored) throw { message: 'Department not found', statusCode: 404 };
     return restored;
   } catch (error) {
-    throw new Error('Error restoring department:' + error.message); // menangani kesalahan
+    logger.error('Error restoring department: ', error.message);
+    throw { message: 'Error restoring department', statusCode: 500 };
   }
 };

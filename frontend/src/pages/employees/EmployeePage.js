@@ -7,6 +7,7 @@ import { enUS } from 'date-fns/locale';
 import { BsArchive, BsArrowRepeat, BsDatabaseCheck, BsDatabaseX } from 'react-icons/bs';
 import ConfirmDeleteModal from '../../components/employees/ConfirmDeleteModal';
 import ConfirmRestoreModal from '../../components/employees/ConfirmRestoreModal';
+import EmployeeModal from '../../components/employees/EmployeeModal';
 
 function EmployeePage() {
   const [employees, setEmployees] = useState([]);
@@ -19,6 +20,7 @@ function EmployeePage() {
   const [loading, setLoading] = useState(false);
   const [notification, setNotification] = useState(null);
 
+  const [showModal, setShowModal] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
 
   const [deleteId, setDeleteId] = useState('');
@@ -70,6 +72,11 @@ function EmployeePage() {
   const handlePageChange = (page) => {
     setCurrentPage(page);
   }
+
+  const showAddModal = () => {
+    setSelectedEmployee(null);
+    setShowModal(true);
+  };
 
   const showDeleteConfirmModal = (id, fullname) => {
     if (!id) {
@@ -154,7 +161,7 @@ function EmployeePage() {
           <div className='d-flex justify-content-between'>
             <div>
               {!showDeleted && (
-                <Button variant='primary'>
+                <Button variant='primary' onClick={showAddModal}>
                   Add
                 </Button>
               )}
@@ -257,6 +264,12 @@ function EmployeePage() {
           </Pagination>
         </>
       )}
+
+      <EmployeeModal
+        show={showModal}
+        handleClose={() => setShowModal(false)}
+        employee={selectedEmployee}
+      />
 
       <ConfirmDeleteModal
         show={showConfirmDeleteModal}

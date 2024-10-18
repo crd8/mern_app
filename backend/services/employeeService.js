@@ -1,7 +1,7 @@
 const { Employee } = require('../models');
 const { Op } = require('sequelize');
 
-exports.getEmployees = async ({ page = 1, pageSize = 10, search = '' }) => {
+exports.getEmployees = async ({ page = 1, pageSize = 10, search = '', paranoid = true }) => {
   const pageNum = parseInt(page, 10);
   const size = parseInt(pageSize, 10);
   if (isNaN(pageNum) || pageNum <= 0) throw new Error('Invalid page number');
@@ -20,6 +20,7 @@ exports.getEmployees = async ({ page = 1, pageSize = 10, search = '' }) => {
       limit: size,
       offset: offset,
       order: [['createdAt', 'DESC']],
+      paranoid: paranoid
     });
 
     return {

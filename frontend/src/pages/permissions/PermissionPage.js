@@ -82,7 +82,7 @@ function PermissionPage() {
   const showAddModal = () => {
     setSelectedPermission(null);
     setShowModal(true);
-  }
+  };
 
   const showEditModal = (permission) => {
     setSelectedPermission(permission);

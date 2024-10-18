@@ -47,10 +47,10 @@ exports.createPermission = async (req, res) => {
   try {
     const { name, description } = req.body;
 
-    if (!name) return res.status(400).json({ error: 'Permission name is required' });
-    if (!description) return res.status(400).json({ error: 'Permission description is required' });
+    if (!name.trim()) return res.status(400).json({ error: 'Permission name is required' });
+    if (!description.trim()) return res.status(400).json({ error: 'Permission description is required' });
 
-    const permission = await permissionService.createPermission({ name, description });
+    const permission = await permissionService.createPermission({ name: name.trim(), description: description.trim() });
     res.status(201).json({ message: 'Permission successfully created', permission });
   } catch (error) {
     if (error.message === 'Permission name already exists') {

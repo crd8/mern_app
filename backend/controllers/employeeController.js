@@ -2,8 +2,8 @@ const employeeService = require('../services/employeeService');
 
 exports.getAllEmployees = async (req, res) => {
   try {
-    const { page = 1, pageSize = 10, search = ''} = req.query;
-    const employees = await employeeService.getEmployees({ page, pageSize, search });
+    const { page = 1, pageSize = 10, search = '', paranoid = true } = req.query;
+    const employees = await employeeService.getEmployees({ page, pageSize, search, paranoid: paranoid === 'false' ? 'false' : 'true' });
     res.json(employees);
   } catch (error) {
     console.error('Error in get employees: ', error);

@@ -1,0 +1,13 @@
+{"level":"error","message":"Error retrieving department by ID:  Department not found","timestamp":"2024-10-17T07:45:01.022Z"}
+{"level":"error","message":"Error retrieving department by ID:  Department not found","timestamp":"2024-10-17T07:45:02.184Z"}
+{"level":"error","message":"Error creating new department: ","timestamp":"2024-10-18T02:33:58.792Z"}
+{"level":"error","message":"Error creating new department: ","timestamp":"2024-10-18T02:34:00.131Z"}
+{"level":"error","message":"Error creating new department: ","timestamp":"2024-10-18T02:34:01.595Z"}
+{"level":"error","message":"Error creating new department: ","timestamp":"2024-10-18T02:34:30.619Z"}
+{"level":"error","message":"Error creating new department: ","timestamp":"2024-10-18T02:34:31.698Z"}
+{"level":"error","message":"Error creating new department: ","timestamp":"2024-10-18T02:34:45.544Z"}
+{"level":"error","message":"Error creating new department:  Department name already exists","timestamp":"2024-10-18T02:35:42.036Z"}
+{"level":"error","message":"Error creating new department:  Department name already exists","timestamp":"2024-10-18T02:36:34.118Z"}
+{"level":"error","message":"Error creating new department:  Department name already exists","timestamp":"2024-10-18T02:37:21.526Z"}
+{"level":"error","message":"Error creating new department:  Department name already exists","timestamp":"2024-10-18T02:45:11.075Z"}
+{"level":"error","message":"Error creating new department:  Department name already exists","timestamp":"2024-10-18T02:45:12.030Z"}
