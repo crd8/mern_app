@@ -2,12 +2,19 @@ const departmentService = require('../services/departmentService');
 
 exports.getAllDepartments = async (req, res) => {
   try {
-    const { page = 1, pageSize = 10, search = '', paranoid = true } = req.query;
-    const allDepartments = await departmentService.getDepartments({ page, pageSize, search, paranoid: paranoid === 'false' ? false : true });
-    res.json(allDepartments);
+    const { page = 1, pageSize = 10, search = '', paranoid = true, all = 'false' } = req.query;
+    const isParanoid = paranoid === 'false' ? false : true;
+
+    if (all === 'true') {
+      const allDepartments = await departmentService.getAllDepartments({ paranoid: isParanoid });
+      return res.json(allDepartments);
+    } else {
+      const paginatedDepartments = await departmentService.getDepartments({ page, pageSize, search, paranoid: isParanoid });
+      return res.json(paginatedDepartments);
+    }    
   } catch (error) {
-    console.error('Error in getAllDepartments:', error);
-    res.status(500).json({ error: error.message });
+    console.error('Error in getAllDepartments: ', error);
+    return res.status(error.statusCode || 500).json({ error: error.message });
   }
 };
 
@@ -15,21 +22,24 @@ exports.getDeletedDepartments = async (req, res) => {
   try {
     const { page = 1, pageSize = 5, search = '' } = req.query;
     const deletedDepartments = await departmentService.getDeletedDepartments({ page, pageSize, search });
-    res.json(deletedDepartments);
+    
+    return res.json(deletedDepartments);
   } catch (error) {
-    console.error('Error in getDeletedDepartments:', error);
-    res.status(500).json({ error: error.message });
+    console.error('Error in getDeletedDepartments: ', error);
+    return res.status(error.statusCode || 500).json({ error: error.message });
   }
 };
 
 exports.getDepartmentById = async (req, res) => {
   try {
     const { id } = req.params;
+
     if (!id) {
       return res.status(400).json({ error: 'Department ID is required' });
     }
+
     const department = await departmentService.getDepartmentById(id);
-    res.json(department);
+    return res.json(department);
   } catch (error) {
     console.error('Error in getDepartmentById: ', error);
     res.status(error.statusCode || 500).json({ error: error.message });
@@ -48,41 +58,36 @@ exports.createDepartment = async (req, res) => {
     }
 
     const department = await departmentService.createDepartment({ name: name.trim(), description: description.trim() });
-    res.status(201).json({ message: 'Department created successfully', department });
+    res.status(201).json({ message: 'Department successfully created', department });
   } catch (error) {
-    if (error.message === 'Department name already exists') {
-      return res.status(409).json({ error: 'Department name already exists' });
-    }
-    console.error('Error in createDepartment:', error.message);
-    res.status(500).json({ error: 'An unexpected error occurred' });
+    console.error('Error in createDepartment: ', error.message);
+    res.status(error.statusCode || 500).json({ error: error.message });
   }
 };
 
 exports.updateDepartment = async (req, res) => {
   try {
     const { name, description } = req.body;
-    const { id } = req.params;
 
-    if (!id) {
-      return res.status(400).json({ error: 'Department ID is required' });
-    }
     if (!name.trim()) {
       return res.status(400).json({ error: 'Department name is required' });
     }
     if (!description.trim()) {
       return res.status(400).json({ error: 'Department description is required' });
     }
-
+    
+    const { id } = req.params;
+    
     const department = await departmentService.updateDepartment(id, { name, description });
 
     if (department) {
-      res.json({ message: 'Department update successfully', department });
+      return res.status(200).json({ message: 'Department update successfully', department });
     } else {
       res.status(404).json({ error: 'Department not found' });
     }
   } catch (error) {
-    console.error('Error in updateDepartment:', error);
-    res.status(500).json({ error: error.message });
+    console.error('Error in updateDepartment: ', error);
+    return res.status(error.statusCode || 500).json({ error: error.message });
   }
 };
 
@@ -124,7 +129,6 @@ exports.batchDeleteDepartments = async (req, res) => {
 
 exports.destroyDepartment = async (req, res) => {
   try {
-  
     const { id } = req.params;
     if (!id) {
       return res.status(400).json({ error: 'Department ID is required' });
@@ -137,9 +141,9 @@ exports.destroyDepartment = async (req, res) => {
       res.status(404).json({ message: 'Department not found' });
     }
   } catch (error) {
-    if (error.message === 'Department not found' || error.message === 'Department must be soft deleted first') {
-      return res.status(400).json({ error: error.message });
-    }
+    if (error.message === 'Department not found') return res.status(404).json({ notification: error.message });
+    if (error.message === 'Department must be soft deleted first') return res.status(400).json({ notification: error.message });
+    
     console.error('Error in destroyDepartment:', error.message);
     res.status(500).json({ error: 'An unexpected error occurred' });
   }

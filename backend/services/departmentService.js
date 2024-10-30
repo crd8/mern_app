@@ -1,18 +1,36 @@
 const { Department } = require('../models');
 const { Op } = require('sequelize');
 const logger = require('../utils/logger');
-const { stack } = require('sequelize/lib/utils');
 
-exports.getDepartments = async ({ page = 1, pageSize = 10, search = '', paranoid = true }) => {
+const validatePaginationParams = (page, pageSize) => {
   const pageNum = parseInt(page, 10);
   const size = parseInt(pageSize, 10);
-  
-  if (isNaN(pageNum) || pageNum <= 0) throw { message: 'Invalid page number', statusCode: 400 };
-  if (isNaN(size) || size <= 0) throw { message: 'Invalid page size', statusCode: 400}
 
-  const offset = (pageNum - 1) * size;
+  if (isNaN(pageNum) || pageNum <= 0) throw { message: 'Invalid page number', statusCode: 400 };
+  if (isNaN(size) || size <= 0) throw { message: 'Invalid page size', statusCode: 400};
+
+  return { pageNum, size };
+};
+
+exports.getAllDepartments = async ({ paranoid }) => {
   try {
-  
+    const departments = await Department.findAll({
+      paranoid: paranoid,
+    });
+    return {
+      data: departments
+    };
+  } catch (error) {
+    logger.error('Error retrieving all departments: ', error.message);
+    throw { message: 'Error retrieving all departments', statusCode: 500 };
+  }
+}
+
+exports.getDepartments = async ({ page, pageSize, search, paranoid }) => {
+  const { pageNum, size } = validatePaginationParams(page, pageSize);
+  const offset = (pageNum - 1) * size;
+
+  try {
     const { count, rows } = await Department.findAndCountAll({
       where: {
         [Op.or]: [
@@ -37,27 +55,18 @@ exports.getDepartments = async ({ page = 1, pageSize = 10, search = '', paranoid
   }
 };
 
-exports.getDeletedDepartments = async ({ page = 1, pageSize = 10, search = '' }) => {
-  const pageNum = parseInt(page, 10);
-  const size = parseInt(pageSize, 10);
-
-  if (isNaN(pageNum) || pageNum <= 0) throw { message: 'Invalid page number', statusCode: 400 };
-  if (isNaN(size) || size <= 0) throw { message: 'Invalid page size', statusCode: 400 };
-
+exports.getDeletedDepartments = async ({ page, pageSize, search }) => {
+  const { pageNum, size} = validatePaginationParams(page, pageSize);
   const offset = (pageNum - 1) * size;
 
   try {
     const { count, rows } = await Department.findAndCountAll({
       where: {
-        [Op.and]: [
-          { deletedAt: { [Op.not]: null } },
-          {
-            [Op.or]: [
-              { name: { [Op.like]: `%${search}%` } },
-              { description: { [Op.like]: `%${search}%` } },
-            ]
-          }
-        ]
+        deletedAt: { [Op.not]: null },
+        [Op.or]: [
+          { name: { [Op.like]: `%${search}%` } },
+          { description: { [Op.like]: `%${search}%` } }
+        ],
       },
       paranoid: false,
       limit: size,
@@ -80,7 +89,11 @@ exports.getDepartmentById = async (id) => {
   if (!id) throw { message: 'Department ID is required', statusCode: 400 };
   try {
     const department = await Department.findByPk(id);
-    if (!department) throw { message: 'Department not found', statusCode: 404 };
+
+    if (!department) {
+      throw { message: 'Department not found', statusCode: 404 };
+    }
+
     return department;
   } catch (error) {
     if (error.statusCode) {
@@ -92,8 +105,6 @@ exports.getDepartmentById = async (id) => {
   }
 };
 
-
-
 exports.createDepartment = async ({ name, description}) => {
   if (!name.trim()) throw { message: 'Department name is required', statusCode: 400 };
   if (!description.trim()) throw { message: 'Department description is required', statusCode: 400 };
@@ -104,6 +115,7 @@ exports.createDepartment = async ({ name, description}) => {
     if (existingNameDepartment) {
       throw { message: 'Department name already exists', statusCode: 409 };
     }
+    
     const newDepartment = await Department.create({ name: name.trim(), description: description.trim() });
     return newDepartment;
   } catch (error) {
@@ -120,11 +132,17 @@ exports.updateDepartment = async (id, { name, description }) => {
   if (!id) throw { message: 'Department ID is required', statusCode : 400 };
   if (!name.trim()) throw { message: 'Department name is required', statusCode: 400 };
   if (!description.trim()) throw { message: 'Department description is required', statusCode: 400 };
+  
   try {
-    const [updated] = await Department.update({ name: name.trim(), description: description.trim() }, { where: { id } });
+    const [updated] = await Department.update(
+      { name: name.trim(), description: description.trim() },
+      { where: { id } }
+    );
+
     if (updated) {
       return await Department.findByPk(id);
     }
+
     throw { message: 'Department not found', statusCode: 404 };
   } catch (error) {
     logger.error('Error updating department: ', { message: error.message, stack: error.stack });
@@ -138,7 +156,7 @@ exports.deleteDepartment = async (id) => {
   try {
     const deleted = await Department.destroy({ where: { id } });
     if (deleted === 0) {
-      return { message: 'Department not founda', status: 404 };
+      return { message: 'Department not found', status: 404 };
     }
     return { message: 'Department deleted', status: 200 };
   } catch (error) {
@@ -181,8 +199,12 @@ exports.destroyDepartment = async (id) => {
     const destroyed = await Department.destroy({ where: { id }, force: true });
     return destroyed;
   } catch (error) {
-    logger.error('Error permanently deleting department: ', error.message);
-    throw { message: 'Error permanently deleting department: ' + error.message, statusCode: error.statusCode || 500 };
+    logger.error('Error permanently deleting department: ', { message: error.message, stack: error.stack });
+    if (error.statusCode) {
+      throw error;
+    } else {
+      throw { message: 'Error permanently deleting department: ' + error.message, statusCode: error.statusCode || 500 };
+    }
   }
 };
 

@@ -13,7 +13,7 @@ const DepartmentModal = ({ show, handleClose, handleSave, department }) => {
 
   const refreshExistingNames = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/departments?paranoid=false');
+      const response = await axios.get('http://localhost:5000/api/departments?paranoid=false&all=true');
       const names = response.data.data.map(department => department.name);
       setExistingNames(names);
     } catch (error) {
