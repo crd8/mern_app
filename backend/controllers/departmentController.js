@@ -100,14 +100,15 @@ exports.deleteDepartment = async (req, res) => {
     }
 
     const result = await departmentService.deleteDepartment(id);
-    if (result.message === 'Department not found') {
+
+    if (result.status === 404) {
       res.status(404).json({ error: result.message });
-    } else {
-      res.status(200).json({ message: result.message });
-    }
+    } 
+    
+    res.status(200).json({ message: result.message });
   } catch (error) {
-    console.error('Error in deleteDepartment:', error);
-    res.status(500).json({ error: error.message });
+    console.error('Error in deleteDepartment: ', error);
+    res.status(error.statusCode || 500).json({ error: error.message });
   }
 };
 
@@ -163,7 +164,7 @@ exports.restoreDepartment = async (req, res) => {
       res.status(404).json({ message: 'Department not found' });
     }
   } catch (error) {
-    console.error('Error in restoreDepartment:', error);
+    console.error('Error in restoreDepartment: ', error);
     res.status(500).json({ error: error.message });
   }
 };

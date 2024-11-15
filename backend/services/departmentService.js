@@ -88,10 +88,15 @@ exports.getDeletedDepartments = async ({ page, pageSize, search }) => {
 exports.getDepartmentById = async (id) => {
   if (!id) throw { message: 'Department ID is required', statusCode: 400 };
   try {
-    const department = await Department.findByPk(id);
+
+    const department = await Department.findByPk(id, { paranoid: false });
 
     if (!department) {
       throw { message: 'Department not found', statusCode: 404 };
+    }
+
+    if (department.deletedAt) {
+      throw { message: 'Department in archive', statusCode: 404 };
     }
 
     return department;
@@ -110,10 +115,17 @@ exports.createDepartment = async ({ name, description}) => {
   if (!description.trim()) throw { message: 'Department description is required', statusCode: 400 };
   
   try {
-    const existingNameDepartment  = await Department.findOne({ where: { name: name.trim() } });
+    const existingNameDepartment  = await Department.findOne({ 
+      where: { name: name.trim() }, 
+      paranoid: false
+    });
     
     if (existingNameDepartment) {
-      throw { message: 'Department name already exists', statusCode: 409 };
+      if (existingNameDepartment.deletedAt) {
+        throw { message: 'Department name already exists in archived data', statusCode: 409 };
+      } else {
+        throw { message: 'Department name already exists', statusCode: 409 };
+      }
     }
     
     const newDepartment = await Department.create({ name: name.trim(), description: description.trim() });
@@ -134,6 +146,29 @@ exports.updateDepartment = async (id, { name, description }) => {
   if (!description.trim()) throw { message: 'Department description is required', statusCode: 400 };
   
   try {
+    const department = await Department.findByPk(id, { paranoid: false });
+
+    if (!department) {
+      throw { message: 'Department not found', statusCode: 404 };
+    }
+
+    if (department.deletedAt) {
+      throw { message: 'Department in archive, you can only update active department', statusCode: 400 };
+    }
+
+    const existingNameDepartment = await Department.findOne({
+      where: { name: name.trim() },
+      paranoid: false
+    });
+
+    if (existingNameDepartment && existingNameDepartment.id !== id) {
+      if (existingNameDepartment.deletedAt) {
+        throw { message: 'Department name already exists in archived data', statusCode: 409 };
+      } else {
+        throw { message: 'Department name already exists', statusCode: 409 };
+      }
+    }
+
     const [updated] = await Department.update(
       { name: name.trim(), description: description.trim() },
       { where: { id } }
@@ -145,23 +180,36 @@ exports.updateDepartment = async (id, { name, description }) => {
 
     throw { message: 'Department not found', statusCode: 404 };
   } catch (error) {
-    logger.error('Error updating department: ', { message: error.message, stack: error.stack });
-    throw { message: 'Error updating department: ' + error.message, statusCode: error.statusCode || 500 };
+    if (error.statusCode) {
+      throw error;
+    } else {
+      logger.error('Error updating department: ', { message: error.message, stack: error.stack });
+      throw { message: 'Error updating department: ' + error.message, statusCode: 500 };
+    }
   }
 };
 
-
 exports.deleteDepartment = async (id) => {
   if (!id) throw { message: 'Department ID is required', statusCode: 400 };
+  
   try {
-    const deleted = await Department.destroy({ where: { id } });
-    if (deleted === 0) {
-      return { message: 'Department not found', status: 404 };
+    const department = await Department.findOne({ where: { id }, paranoid: false });
+
+    if (!department) throw { message: 'Department not found', statusCode: 404 };
+    
+    if (department.deletedAt !== null) {
+      throw { message: 'Department already archived', statusCode: 400}
     }
-    return { message: 'Department deleted', status: 200 };
+
+    await Department.destroy({ where: { id } });
+    return { message: 'Department deleted', statusCode: 200 };
   } catch (error) {
-    logger.error('Error deleting department: ', { message: error.message, stack: error.stack });
-    throw { message: 'Error deleting department: '+ error.message, statusCode: error.statusCode || 500 };
+    if (error.statusCode) {
+      throw error;
+    } else {
+      logger.error('Error deleting department: ', { message: error.message, stack: error.stack });
+      throw { message: 'Error deleting department: '+ error.message, statusCode: 500 };
+    }
   }
 };
 
@@ -211,11 +259,23 @@ exports.destroyDepartment = async (id) => {
 exports.restoreDepartment = async (id) => {
   if (!id) throw { message: 'Department ID is required', statusCode: 400 };
   try {
-    const restored = await Department.restore({ where: { id }});
-    if (!restored) throw { message: 'Department not found', statusCode: 404 };
-    return restored;
+    const department = await Department.findOne({ where: { id }, paranoid: false });
+
+    if (!department) throw { message: 'Department not found', statusCode: 404 };
+
+    if (department.deletedAt === null) {
+      throw { message: 'Department is already active and cannot be restored', statusCode: 400 };
+    }
+
+    await Department.restore({ where: { id } });
+    return await Department.findByPk(id);
   } catch (error) {
-    logger.error('Error restoring department: ', error.message);
-    throw { message: 'Error restoring department', statusCode: 500 };
+    if (error.statusCode) {
+      throw error;
+    } else {
+      logger.error('Error restoring department: ', { message: error.message, stack: error.stack });
+      throw { message: 'Error restoring department: ', statusCode: 500 };
+    }
+    
   }
 };
