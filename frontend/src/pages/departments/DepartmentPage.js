@@ -1,6 +1,5 @@
-// Import library dan komponen yang diperlukan
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import axios from 'axios'; // untuk melakukan permintaan HTTP
+import axios from 'axios';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { Table, Button, ToggleButtonGroup, ToggleButton, ButtonGroup, Container, Toast, Pagination, Form, Spinner, OverlayTrigger, Tooltip } from 'react-bootstrap';
 import { BsPencilSquare, BsTrash, BsArchive, BsArrowRepeat, BsDatabaseCheck, BsDatabaseX } from "react-icons/bs";
@@ -12,105 +11,102 @@ import ConfirmDestroyModal from "../../components/departments/ConfirmDestroyModa
 import ConfirmRestoreModal from "../../components/departments/ConfirmRestoreModal";
 
 function DepartmentPage() {
-  // state
-  const [departments, setDepartments] = useState([]); // State untuk data departemen
-  const [totalPages, setTotalPages] = useState(1); // State untuk total jumlah halaman
-  const [currentPage, setCurrentPage] = useState(1); // State untuk nomor halaman saat ini
-  const [searchTerm, setSearchTerm] = useState(''); // State untuk kata kunci pencarian
-  const searchInputRef = useRef(null); // Ref untuk mengelola fokus input pencarian
-  const [showModal, setShowModal] = useState(false); // State untuk menampilkan atau menyembunyikan modal departemen
-  const [selectedDepartment, setSelectedDepartment] = useState(null); // State untuk departemen yang dipilih untuk di-edit
-  const [showConfirmDeleteModal, setShowConfirmDeleteModal] = useState(false); // State untuk menampilkan atau menyembunyikan modal konfirmasi hapus
-  const [showConfirmDeleteSelectedModal, setShowConfirmDeleteSelectedModal] = useState(false); // State baru untuk konfirmasi delete selected
-  const [showConfirmDestroyModal, setShowConfirmDestroyModal] = useState(false); // State untuk menampilkan atau menyembunyikan modal konfirmasi musnah
-  const [showConfirmRestoreModal, setShowConfirmRestoreModal] = useState(false); // State untuk menampilkan atau menyembunyikan modal konfirmasi restore
-  const [deleteId, setDeleteId] = useState(''); // State untuk menyimpan ID departemen yang akan dihapus
-  const [destroyId, setDestroyId] = useState(''); // State untuk menyimpan ID departemen yang akan dimusnahkan
-  const [restoreId, setRestoreId] = useState(''); // State untuk menyimpan ID departemen yang akan di restore
-  const [notification, setNotification] = useState(null); // State untuk pesan notifikasi
-  const [loading, setLoading] = useState(false); // State untuk mengelola indikator loading
-  const [showDeleted, setShowDeleted] = useState(false); // State untuk toggle antara departemen aktif dan nonaktif
-  const [selectedIds, setSelectedIds] = useState([]); // state untuk menyimpan ID yang dipilih
+  const [departments, setDepartments] = useState([]);
+  const [totalPages, setTotalPages] = useState(1);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useState('');
+  const searchInputRef = useRef(null);
+  const [showModal, setShowModal] = useState(false);
+  const [selectedDepartment, setSelectedDepartment] = useState(null);
+  const [showConfirmDeleteModal, setShowConfirmDeleteModal] = useState(false);
+  const [showConfirmDeleteSelectedModal, setShowConfirmDeleteSelectedModal] = useState(false);
+  const [showConfirmDestroyModal, setShowConfirmDestroyModal] = useState(false);
+  const [showConfirmRestoreModal, setShowConfirmRestoreModal] = useState(false);
+  const [deleteId, setDeleteId] = useState('');
+  const [destroyId, setDestroyId] = useState('');
+  const [restoreId, setRestoreId] = useState('');
+  const [notification, setNotification] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [showDeleted, setShowDeleted] = useState(false);
+  const [selectedIds, setSelectedIds] = useState([]);
 
-  // untuk mengambil data department dari API
   const fetchDepartments = useCallback(async () => {
-    setLoading(true); // set state loading ke true saat data sedang di fetch
+    setLoading(true);
     try {
-      const endpoint = showDeleted ? '/deleted-departments' : ''; // Memilih endpoint berdasarkan apakah akan menampilkan departemen yang dihapus
-      const response = await axios.get(`http://localhost:5000/api/departments${endpoint}`, { // mengirim permintaan get ke server
+      const endpoint = showDeleted ? '/deleted-departments' : '';
+      const response = await axios.get(`http://localhost:5000/api/departments${endpoint}`, {
         params: {
-          page: currentPage, // mengirim nomor halaman saat ini sebagai parameter
-          search: searchTerm, // mengirim pencarian sebagai parameter
+          page: currentPage,
+          search: searchTerm,
         }
       });
-      setDepartments(response.data.data); // memperbarui state department denan data dari server
-      setTotalPages(response.data.totalPages); // memperbarui state total halaman dengan data dari server
+      setDepartments(response.data.data);
+      setTotalPages(response.data.totalPages);
     } catch (error) {
-      console.error('Error fetching departments:', error); // menampilkan error saat gagal mengambil data
-      setNotification({ type: 'error', message: `Failed to fetch departments: ${error.message}` }); // menampilkan notifikasi kesalahan
+      console.error('Error fetching departments:', error);
+      setNotification({ type: 'error', message: `Failed to fetch departments: ${error.message}` });
     } finally {
-      setLoading(false); // mengatur state loading ke false saat pengambilan data selesai
+      setLoading(false);
     }
-  }, [currentPage, searchTerm, showDeleted]); // fungsi ini akan dijlankan kembali bila currentPage, searchTerm dan showDeleted berubah
+  }, [currentPage, searchTerm, showDeleted]);
   
-  // useEffect untuk menjalankan fungsi fetchDepartments saat komponen dimuat atau ketika dependensi berubah
   useEffect(() => {
-    fetchDepartments(); // Mengambil data departemen
-  }, [fetchDepartments, currentPage, showDeleted]); // Daftar dependensi yang memicu efek ini
+    fetchDepartments();
+  }, [fetchDepartments, currentPage, showDeleted]);
 
-  // Fungsi untuk menangani penyimpanan (pembuatan atau pembaruan) departemen
   const handleSave = async (department) => {
-    setLoading(true); // Set state loading ke true saat data sedang disimpan
+    setLoading(true);
     try {
-      const response = await axios({ // Mengirim permintaan HTTP ke server
-        method: department.id ? 'PUT' : 'POST', // Menggunakan PUT untuk pembaruan, POST untuk pembuatan
-        url: `http://localhost:5000/api/departments/${department.id || ''}`, // Endpoint URL
-        data: department, // Data yang dikirimkan di body permintaan
-        headers: { 'Content-Type': 'application/json' }, // Header permintaan
+      const isUpdate = Boolean(department.id);
+      const response = await axios({
+        method: department.id ? 'PUT' : 'POST',
+        url: `http://localhost:5000/api/departments/${department.id || ''}`,
+        data: department,
+        headers: { 'Content-Type': 'application/json' },
       });
   
-      if (response.status !== 200 && response.status !== 201) { // Memeriksa status yang berhasil
-        throw new Error(`HTTP error! status: ${response.status}`); // Melempar error jika status tidak OK
+      if (response.status !== 200 && response.status !== 201) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
   
-      fetchDepartments(); // Memperbarui data departemen setelah penyimpanan
-      setShowModal(false); // Menutup modal setelah penyimpanan
-      setSelectedDepartment(null); // Menghapus state departemen yang dipilih
-      setNotification({ type: 'success', message: 'Department saved successfully!' }); // Menampilkan notifikasi keberhasilan
+      fetchDepartments();
+      setShowModal(false);
+      setSelectedDepartment(null);
+
+      const message = isUpdate
+        ? `Department "${department.name}" successfully updated!`
+        : `Department "${department.name}" successfully added!`
+      ;
+      setNotification({ type: 'success', message });
     } catch (error) {
-      console.error('Error saving department:', error.message); // Menampilkan error jika penyimpanan gagal
+      console.error('Error saving department:', error.message);
       if (error.response) {
-        if (error.response.status === 400) { // Menangani error 400 secara khusus
-          setNotification({ type: 'error', message: error.response.data.error || 'Gagal menyimpan department' }); // Menampilkan pesan kesalahan spesifik
+        if (error.response.status === 400) {
+          setNotification({ type: 'error', message: error.response.data.error || 'Failed to save department' });
         } else {
-          setNotification({ type: 'error', message: 'Failed to save department: An unexpected error occurred' }); // Menampilkan pesan kesalahan umum
+          setNotification({ type: 'error', message: 'Failed to save department: An unexpected error occurred' });
         }
       } else {
-        setNotification({ type: 'error', message: 'Failed to save department: An unexpected error occurred' }); // Menampilkan pesan kesalahan untuk masalah jaringan
+        setNotification({ type: 'error', message: 'Failed to save department: An unexpected error occurred' });
       }
     } finally {
-      setLoading(false); // Set state loading ke false setelah penyimpanan selesai
+      setLoading(false);
     }
   };
 
-  // Fungsi untuk menangani penghapusan departemen
-  const handleDelete = async (id) => {
-    setLoading(true); // Set state loading ke true saat proses penghapusan
+  const handleDelete = async (id, name) => {
+    setLoading(true);
     try {
-      const response = await axios.delete(`http://localhost:5000/api/departments/${id}`); // Mengirim permintaan DELETE ke server
-
-      if (response.status !== 200) { // Memeriksa status yang berhasil
-        throw new Error(`Http error! status: ${response.status}`); // Melempar error jika status tidak OK
-      }
-
-      fetchDepartments(); // Memperbarui data departemen setelah penyimpanan
-      setShowConfirmDeleteModal(false); // Menutup modal konfirmasi penghapusan
-      setNotification({ type: 'success', message: 'Department deleted successfully!' }); // Menampilkan notifikasi keberhasilan
+      await axios.delete(`http://localhost:5000/api/departments/${id}`);
+      fetchDepartments();
+      setShowConfirmDeleteModal(false);
+      setNotification({ type: 'success', message: `Department "${name}" successfully archived!` });
     } catch (error) {
-      console.error('Error deleting department:', error.message); // Menampilkan error jika penghapusan gagal
-      setNotification({ type: 'error', message: `Failed to delete department: ${error.message} `}); // Menampilkan notifikasi kesalahan
+      console.error('Error deleting department:', error.message);
+      const message = error.response?.data?.error || 'An unexpected error occured';
+      setNotification({ type: 'error', message: `Failed to delete department: ${message} `});
     } finally {
-      setLoading(false); // Set state loading ke false setelah penghapusan selesai
+      setLoading(false);
     }
   };
 
@@ -146,130 +142,101 @@ function DepartmentPage() {
     );
   };
 
-  // Fungsi untuk menangani pemusnahan (penghapusan permanen) departemen
-  const handleDestroy = async (id) => {
-    setLoading(true); // Set state loading ke true saat proses pemusnahan
+  const handleDestroy = async (id, name) => {
+    setLoading(true);
     try {
-      const response = await axios.delete(`http://localhost:5000/api/departments/${id}/destroy`); // Mengirim permintaan DELETE ke endpoint pemusnahan
-
-      if (response.status !== 200) { // Memeriksa status yang berhasil
-        throw new Error(`HTTP error! status: ${response.status}`); // Melempar error jika status tidak OK
-      }
-
-      fetchDepartments(); // Memperbarui data departemen setelah pemusnahan
-      setShowConfirmDestroyModal(false); // Menutup modal konfirmasi pemusnahan
-      setNotification({ type: 'success', message: 'Department permanently deleted!' }); // Menampilkan notifikasi keberhasilan
+      await axios.delete(`http://localhost:5000/api/departments/${id}/destroy`);
+      fetchDepartments();
+      setShowConfirmDestroyModal(false);
+      setNotification({ type: 'success', message: `Department "${name}" successfully deleted!` });
     } catch (error) {
-      console.error('Error destroying department', error.message); // Menampilkan error jika pemusnahan gagal
-      setNotification({ type: 'error', message: `Failed to destroy department: ${error.message}` }); // Menampilkan notifikasi kesalahan
+      console.error('Error destroying department: ', error.message);
+      const message = error.response?.data?.error || 'An unexpected error occured';
+      setNotification({ type: 'error', message: `Failed to destroy department: ${message}` });
     } finally {
-      setLoading(false); // Set state loading ke false setelah pemusnahan selesai
+      setLoading(false);
     }
   };
 
-  // funsgi untuk menangani restore department
-  const handleRestore = async (id) => {
-    setLoading(true); // set state loading ke true
+  const handleRestore = async (id, name) => {
+    setLoading(true);
     try {
-      const response = await axios.put(`http://localhost:5000/api/departments/${id}/restore`); // mengirim permintaan PUT ke endpoint restore
-
-      if (response.status !== 200) { // memeriksa status yang berhasil
-        throw new Error(`HTTP error! status: ${response.status}`); // melempar error jika status !OK
-      }
-
-      fetchDepartments(); // memperbarui data setelah restore
-      setShowConfirmRestoreModal(false); // menutup modal restore
-      setNotification({ type: 'success', message: 'Department restored successfully!' }) // menampilkan notif berhasil
+      await axios.put(`http://localhost:5000/api/departments/${id}/restore`);
+      fetchDepartments();
+      setShowConfirmRestoreModal(false);
+      setNotification({ type: 'success', message: `Department "${name}" successfully restored!` });
     } catch (error) {
-      console.error('Error restoring department:', error.message); // menampilkan error jika restore gagal
-      setNotification({ type: 'error', message: `Failed to restore department: ${error.message}` }) // menampilkan notif kesalahan
+      console.error('Error restoring department: ', error.message);
+      const message =  error.response?.data?.error || 'An unexpected error occured';
+      setNotification({ type: 'error', message: `Failed to restore department: ${message}` })
     } finally {
-      setLoading(false); // set state loading ke false setelah restore selesai
+      setLoading(false);
     }
   };
 
-  // Fungsi untuk menangani klik tombol edit departemen
   const handleEdit = (department) => {
-    setSelectedDepartment(department); // Mengatur departemen yang dipilih untuk di-edit
-    setShowModal(true); // Menampilkan modal untuk mengedit departemen
-  };
-
-  // Fungsi untuk menangani penambahan departemen baru
-  const handleAdd = () => {
-    // Mengatur state 'selectedDepartment' ke 'null' karena ini adalah operasi penambahan,
-    // sehingga tidak ada departemen yang sedang dipilih (tidak ada data departemen lama)
-    setSelectedDepartment(null);
-    // Menampilkan modal (form) untuk menambahkan departemen baru
+    setSelectedDepartment(department);
     setShowModal(true);
   };
 
-  // Fungsi untuk menangani klik tombol hapus
+  const handleAdd = () => {
+    setSelectedDepartment(null);
+    setShowModal(true);
+  };
+
   const showDeleteConfirmModal = (id, name) => {
     if (!id) {
       console.error("invalid ID for deletion");
       return;
     }
-    setDeleteId(id); // Menyimpan ID departemen yang akan dihapus
-    setSelectedDepartment({ id, name, description: '' }); // Menyimpan ID, Name dan deskripsi departemen yang akan dihapus
-    setShowConfirmDeleteModal(true); // Menampilkan modal konfirmasi penghapusan
+    setDeleteId(id);
+    setSelectedDepartment({ id, name, description: '' });
+    setShowConfirmDeleteModal(true);
   };
 
-  // Fungsi untuk menangani klik tombol destroy
   const showDestroyConfirmModal = (id, name) => {
-    setDestroyId(id); // Menyimpan ID departemen yang akan dihapus
-    setSelectedDepartment({ id, name, description: '' }); // Menyimpan ID, Name dan deskripsi departemen yang akan dihapus
-    setShowConfirmDestroyModal(true); // Menampilkan modal konfirmasi destroy
+    setDestroyId(id);
+    setSelectedDepartment({ id, name, description: '' });
+    setShowConfirmDestroyModal(true);
   };
 
-  // fungsi untuk menangani klik tombol restore
   const showRestoreConfirmModal = (id, name) => {
-    setRestoreId(id); // menyimpan id yang akan direstore
-    setSelectedDepartment({ id, name, description: '' }); // menyimpan id, name dan desc department yang akan di restore
-    setShowConfirmRestoreModal(true); // menampilkan confirm restore modal
+    setRestoreId(id);
+    setSelectedDepartment({ id, name, description: '' });
+    setShowConfirmRestoreModal(true);
   };
 
-  // Fungsi untuk menangani perubahan pada input pencarian
   const handleSearchChange = (e) => {
-    setSearchTerm(e.target.value); // Memperbarui state pencarian dengan nilai input pengguna
-    setCurrentPage(1); // Mengatur ulang halaman ke 1 saat melakukan pencarian baru
+    setSearchTerm(e.target.value);
+    setCurrentPage(1);
   };
 
-  // Menggunakan useEffect untuk mengatur fokus pada input pencarian saat halaman dimuat
   useEffect(() => {
     if (searchInputRef.current) {
-      searchInputRef.current.focus(); // Mengatur fokus pada input pencarian
+      searchInputRef.current.focus();
     }
-  }, [searchTerm, departments, currentPage, showDeleted]); // fungsi ini akan dijlankan kembali bila cuurrenge, searchtem dan showdelete berubah
+  }, [searchTerm, departments, currentPage, showDeleted]);
 
-  // useEffect ini akan dijalankan setiap kali nilai 'showDeleted' berubah
   useEffect(() => {
-    setSearchTerm(''); // Mengosongkan kata kunci pencarian ketika 'showDeleted' berubah
-    setCurrentPage(1); // Mengatur halaman saat ini ke halaman pertama setiap kali 'showDeleted' berubah
-    setSelectedIds([]); // Mengosongkan pilihan select saat beralih antara active dan inactive
-  }, [showDeleted]); // fungsi ini akan dijlankan kembali bila showdeleted berubah
+    setSearchTerm('');
+    setCurrentPage(1);
+    setSelectedIds([]);
+  }, [showDeleted]);
 
-  // Fungsi untuk menangani perubahan halaman
   const handlePageChange = (page) => {
-    setCurrentPage(page); // Memperbarui state currentPage dengan nilai halaman baru yang dipilih
+    setCurrentPage(page);
   };
 
-  // Fungsi untuk memformat tanggal ke dalam format yang lebih mudah dibaca
   function formatDate(dateString) {
-    // Mengonversi string tanggal yang diterima menjadi objek Date JavaScript
     const date = new Date(dateString);
-
-    // Menggunakan fungsi format dari date-fns untuk memformat objek Date ke format yang diinginkan
-    // Formatnya: 'dd MMMM yyyy, HH:mm:ss' (contoh: '28 Agustus 2024, 15:30:45')
-    // Locale enUS digunakan untuk memastikan format tanggal dalam bahasa Inggris AS
     return format(date, "dd MMMM yyyy, HH:mm:ss", { locale: enUS });
   };
 
   return (
     <Container className="pt-4">
-      {/* Notifikasi jika ada pesan kesalahan atau keberhasilan */}
       {notification && (
         <Toast
-          onClose={() => setNotification(null)} // Menutup notifikasi saat di-klik
+          onClose={() => setNotification(null)}
           autohide
           delay={8000}
           show={!!notification}
@@ -289,13 +256,11 @@ function DepartmentPage() {
           <Toast.Body>{notification.message}</Toast.Body>
         </Toast>
       )}
-      {/* Spinner/loading indicator muncul saat data sedang diambil */}
       {loading && <Spinner animation="border" />}
       {!loading && (
         <>
           <div className="d-flex justify-content-between">
             <div>
-              {/* Tombol untuk menambahkan departemen baru, hanya muncul jika 'showDeleted' bernilai false */}
               {!showDeleted && (
                 <Button variant="primary" onClick={handleAdd}>Add</Button>
               )}
@@ -304,33 +269,29 @@ function DepartmentPage() {
               )}
             </div>
             <div>
-              {/* Tombol untuk menampilkan atau menyembunyikan departemen yang sudah dihapus */}
-              {/* Component untuk mengelola tombol radio */}
               <ToggleButtonGroup
                 type="radio"
                 name="status-options"
-                value={showDeleted ? 'inactive' : 'active'} // Mengontrol nilai berdasarkan state
-                onChange={(val) => setShowDeleted(val === 'inactive')} // Mengubah state berdasarkan nilai yang dipilih
+                value={showDeleted ? 'inactive' : 'active'}
+                onChange={(val) => setShowDeleted(val === 'inactive')}
                 className="mb-2"
               >
-                {/* Tombol radio untuk menampilkan department aktif */}
                 <ToggleButton
                   id="radio-active"
                   type="radio"
                   variant="outline-primary"
                   value="active"
-                  checked={!showDeleted} // Checked jika showDeleted false
+                  checked={!showDeleted}
                 >
                   <BsDatabaseCheck size={22} />
                 </ToggleButton>
 
-                {/* Tombol radio untuk menampilkan department yang telah dihapus */}
                 <ToggleButton
                   id="radio-inactive"
                   type="radio"
                   variant="outline-secondary"
                   value="inactive"
-                  checked={showDeleted} // Checked jika showDeleted true
+                  checked={showDeleted}
                 >
                   <BsDatabaseX size={22} />
                 </ToggleButton>
@@ -363,7 +324,7 @@ function DepartmentPage() {
                 <th style={{minWidth: 200}}>Name</th>
                 <th style={{minWidth: 400}}>Description</th>
                 <th className="text-nowrap" style={{minWidth: 145}}>Created At</th>
-                <th className="text-nowrap" style={{minWidth: 145}}>{(showDeleted ? 'Deleted At' : 'Updated At')}</th>
+                <th className="text-nowrap" style={{minWidth: 145}}>{(showDeleted ? 'Archived At' : 'Updated At')}</th>
               </tr>
             </thead>
             <tbody>
@@ -388,7 +349,6 @@ function DepartmentPage() {
                   <td className="text-secondary-emphasis">{formatDate(showDeleted ? department.deletedAt : department.updatedAt)}</td>
                   <td>
                     <ButtonGroup>
-                      {/* Tindakan edit dan hapus, hanya muncul jika 'showDeleted' bernilai false */}
                       {!showDeleted && (
                         <>
                           <OverlayTrigger
@@ -416,7 +376,6 @@ function DepartmentPage() {
                         </>
                       )}
 
-                      {/* Tombol untuk menghapus permanen, hanya muncul jika 'showDeleted' bernilai true */}
                       {showDeleted && (
                         <>
                           <OverlayTrigger
@@ -474,7 +433,7 @@ function DepartmentPage() {
       <ConfirmDeleteModal
         show={showConfirmDeleteModal}
         handleClose={() => setShowConfirmDeleteModal(false)}
-        handleDelete={handleDelete}
+        handleDelete={() => handleDelete(deleteId, selectedDepartment?.name)}
         departmentId={deleteId}
         departmentName={selectedDepartment?.name || ''}
       />
@@ -490,7 +449,7 @@ function DepartmentPage() {
       <ConfirmDestroyModal
         show={showConfirmDestroyModal}
         handleClose={() => setShowConfirmDestroyModal(false)}
-        handleDestroy={handleDestroy}
+        handleDestroy={() => handleDestroy(destroyId, selectedDepartment?.name)}
         departmentId={destroyId}
         departmentName={selectedDepartment?.name || ''}
       />
@@ -498,7 +457,7 @@ function DepartmentPage() {
       <ConfirmRestoreModal
         show={showConfirmRestoreModal}
         handleClose={() => setShowConfirmRestoreModal(false)}
-        handleRestore={handleRestore}
+        handleRestore={() => handleRestore(restoreId, selectedDepartment?.name)}
         departmentId={restoreId}
         departmentName={selectedDepartment?.name || ''}
       />

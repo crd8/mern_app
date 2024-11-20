@@ -6,7 +6,6 @@ const ConfirmDeleteModal = ({ show, handleClose, handleDelete, departmentId, dep
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Fungsi untuk menangani klik tombol hapus
   const handleDeleteClick = async () => {
     setLoading(true);
     setError(null);
@@ -14,14 +13,14 @@ const ConfirmDeleteModal = ({ show, handleClose, handleDelete, departmentId, dep
       if (isBulkDelete) {
         await Promise.all(selectedIds.map(id => handleDelete(id)));
       } else {
-        await handleDelete(departmentId); // Menghapus departemen
+        await handleDelete(departmentId);
       }
-      handleClose();// Menutup modal setelah berhasil
+      handleClose()
     } catch (error) {
-      console.error('Error deleting department:', error); // Log kesalahan di console
-      setError('Failed to delete department(s). Please try again.'); // Set pesan kesalahan
+      console.error('Error deleting department:', error);
+      setError('Failed to delete department(s). Please try again.');
     } finally {
-      setLoading(false); // Set loading ke false setelah operasi selesai
+      setLoading(false);
     }
   };
 

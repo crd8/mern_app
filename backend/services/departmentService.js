@@ -6,8 +6,8 @@ const validatePaginationParams = (page, pageSize) => {
   const pageNum = parseInt(page, 10);
   const size = parseInt(pageSize, 10);
 
-  if (isNaN(pageNum) || pageNum <= 0) throw { message: 'Invalid page number', statusCode: 400 };
-  if (isNaN(size) || size <= 0) throw { message: 'Invalid page size', statusCode: 400};
+  if (isNaN(pageNum) || pageNum <= 0) throw { message: 'Invalid page number, must be a positive integer.', statusCode: 400 };
+  if (isNaN(size) || size <= 0) throw { message: 'Invalid page size, must be a positive integer.', statusCode: 400};
 
   return { pageNum, size };
 };
@@ -217,6 +217,7 @@ exports.batchDeleteDepartments = async (ids) => {
   if (!Array.isArray(ids) || ids.length === 0) {
     throw { message: 'Department IDs must be an array and cannot be empty', statusCode: 400 };
   }
+
   try {
     const deleted = await Department.destroy({
       where: {
@@ -226,13 +227,17 @@ exports.batchDeleteDepartments = async (ids) => {
     });
 
     if (deleted === 0) {
-      console.warn('No departments were deleted - possibly already deleted or not found.');
-      return { message: 'No departments were deleted - possibly already deleted or not found.', statusCode: 404 };
+      throw { message: 'No departments were deleted - possibly already deleted or not found.', statusCode: 404 };
     }
-    return { message: 'Selected departments deleted successfully', statusCode: 200 };
+    
+    return { message: 'Selected departments deleted successfully' };
   } catch (error) {
-    logger.error('Error deleting departments: ', error.message);
-    throw { message: 'Error deleting selected departments' + error.message, statusCode: 500 };
+    if (error.statusCode) {
+      throw error;
+    } else {
+      logger.error('Error deleting selected departments: ', { message: error.message, stack: error.stack });
+      throw { message: 'Error deleting selected departments: '+ error.message, statusCode: 500 };
+    }
   }
 };
 
@@ -276,6 +281,5 @@ exports.restoreDepartment = async (id) => {
       logger.error('Error restoring department: ', { message: error.message, stack: error.stack });
       throw { message: 'Error restoring department: ', statusCode: 500 };
     }
-    
   }
 };
