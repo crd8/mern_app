@@ -57,21 +57,35 @@ const DepartmentModal = ({ show, handleClose, handleSave, department }) => {
 
   const onNameChange = (e) => {
     const newName = e.target.value;
-    
+
     if (newName.toLowerCase() === department?.name.toLowerCase()) {
       setName(newName);
-      setErrors(prevErrors => ({ ...prevErrors, name: undefined })); // Pastikan tidak ada error
+      setErrors(prevErrors => ({ ...prevErrors, name: undefined }));
       return;
     }
 
-    setName(newName);
-
-    if (existingNames.map(n => n.toLowerCase()).includes(newName.toLowerCase())) {
+    if (!newName.trim()) {
+      setErrors((prevErrors) => ({ ...prevErrors, name: 'Department name is required' }));
+    } else if (existingNames.map(n => n.toLowerCase()).includes(newName.toLowerCase())) {
       setErrors(prevErrors => ({ ...prevErrors, name: 'Name already exists'}));
     } else {
       setErrors(prevErrors => ({ ...prevErrors, name: undefined }));
     }
+
+    setName(newName);
   };
+
+  const onDescriptionChange = (e) => {
+    const newDescription = e.target.value;
+
+    if (!newDescription.trim()) {
+      setErrors((prevErrors) => ({ ...prevErrors, description: 'Department description is required' }));
+    } else {
+      setErrors((prevErrors) => ({ ...prevErrors, description: undefined }));
+    }
+
+    setDescription(newDescription);
+  }
 
   const onSave = async () => {
     setSaveError('');
@@ -137,7 +151,7 @@ const DepartmentModal = ({ show, handleClose, handleSave, department }) => {
               as='textarea'
               rows={8}
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              onChange={onDescriptionChange}
               isInvalid={!!errors.description}
               required
             />
