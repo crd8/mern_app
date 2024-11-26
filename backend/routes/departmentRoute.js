@@ -9,6 +9,7 @@ router.post('/', departmentController.createDepartment);
 router.put('/:id', departmentController.updateDepartment);
 router.delete('/:id', departmentController.deleteDepartment);
 router.post('/batch-delete', departmentController.batchDeleteDepartments);
+router.post('/batch-restore', departmentController.batchRestoreDepartments);
 router.delete('/:id/destroy', departmentController.destroyDepartment);
 router.put('/:id/restore', departmentController.restoreDepartment);
 

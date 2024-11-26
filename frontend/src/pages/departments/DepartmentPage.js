@@ -22,6 +22,7 @@ function DepartmentPage() {
   const [showConfirmDeleteSelectedModal, setShowConfirmDeleteSelectedModal] = useState(false);
   const [showConfirmDestroyModal, setShowConfirmDestroyModal] = useState(false);
   const [showConfirmRestoreModal, setShowConfirmRestoreModal] = useState(false);
+  const [showConfirmRestoreSelectedModal, setShowConfirmRestoreSelectedModal] = useState(false);
   const [deleteId, setDeleteId] = useState('');
   const [destroyId, setDestroyId] = useState('');
   const [restoreId, setRestoreId] = useState('');
@@ -44,7 +45,10 @@ function DepartmentPage() {
       setTotalPages(response.data.totalPages);
     } catch (error) {
       console.error('Error fetching departments:', error);
-      setNotification({ type: 'error', message: `Failed to fetch departments: ${error.message}` });
+      setNotification({ 
+        type: 'error', 
+        message: `Failed to fetch departments: ${error.message}`
+      });
     } finally {
       setLoading(false);
     }
@@ -77,17 +81,29 @@ function DepartmentPage() {
         ? `Department "${department.name}" successfully updated!`
         : `Department "${department.name}" successfully added!`
       ;
-      setNotification({ type: 'success', message });
+      setNotification({
+        type: 'success',
+        message 
+      });
     } catch (error) {
       console.error('Error saving department:', error.message);
       if (error.response) {
         if (error.response.status === 400) {
-          setNotification({ type: 'error', message: error.response.data.error || 'Failed to save department' });
+          setNotification({ 
+            type: 'error', 
+            message: error.response.data.error || 'Failed to save department' 
+          });
         } else {
-          setNotification({ type: 'error', message: 'Failed to save department: An unexpected error occurred' });
+          setNotification({ 
+            type: 'error', 
+            message: 'Failed to save department: An unexpected error occurred' 
+          });
         }
       } else {
-        setNotification({ type: 'error', message: 'Failed to save department: An unexpected error occurred' });
+        setNotification({ 
+          type: 'error', 
+          message: 'Failed to save department: An unexpected error occurred' 
+        });
       }
     } finally {
       setLoading(false);
@@ -138,7 +154,9 @@ function DepartmentPage() {
 
   const handleSelectChange = (id) => {
     setSelectedIds(prevState => 
-      prevState.includes(id) ? prevState.filter(selectedId => selectedId !== id) : [...prevState, id]
+      prevState.includes(id)
+        ? prevState.filter(selectedId => selectedId !== id)
+        : [...prevState, id]
     );
   };
 
@@ -169,6 +187,42 @@ function DepartmentPage() {
       console.error('Error restoring department: ', error.message);
       const message =  error.response?.data?.error || 'An unexpected error occured';
       setNotification({ type: 'error', message: `Failed to restore department: ${message}` })
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRestoreSelected =  async () => {
+    if (selectedIds.length === 0) {
+      setNotification({
+        type: 'error',
+        message: 'No departments selected for restoration'
+      });
+      return;
+    }
+    setShowConfirmRestoreSelectedModal(true);
+  }
+
+  const handleConfirmRestoreSelected = async () => {
+    setShowConfirmRestoreSelectedModal(false);
+    setLoading(true);
+
+    try {
+      await axios.post('http://localhost:5000/api/departments/batch-restore', {
+        ids: selectedIds,
+      });
+      fetchDepartments();
+      setNotification({
+        type: 'success',
+        message: 'Selected departments successfully restored'
+      });
+      setSelectedIds([]);
+    } catch (error) {
+      console.error("Error restoring selected departments:", error.message);
+      setNotification({
+        type: "error",
+        message: `Failed to restore selected departments: ${error.message}`,
+      });
     } finally {
       setLoading(false);
     }
@@ -250,7 +304,9 @@ function DepartmentPage() {
         >
           <Toast.Header>
             <strong className="me-auto">
-              {notification.type === 'success' ? 'Success Notification' : 'Error Notification'}
+              {notification.type === 'success' 
+                ? 'Success Notification' 
+                : 'Error Notification'}
             </strong>
           </Toast.Header>
           <Toast.Body>{notification.message}</Toast.Body>
@@ -264,8 +320,17 @@ function DepartmentPage() {
               {!showDeleted && (
                 <Button variant="primary" onClick={handleAdd}>Add</Button>
               )}
-              {selectedIds.length > 0 && (
+              {selectedIds.length > 0 && !showDeleted && (
                 <Button className="ms-1" variant="warning" onClick={handleDeleteSelected}>Archive</Button>
+              )}
+              {selectedIds.length > 0 && showDeleted && (
+                <Button
+                  className="ms-1"
+                  variant="success"
+                  onClick={handleRestoreSelected}
+                >
+                  Restore Selected
+                </Button>
               )}
             </div>
             <div>
@@ -318,13 +383,13 @@ function DepartmentPage() {
             <thead>
               <tr>
                 <th>#</th>
-                {!showDeleted && (
-                  <th>Select</th>
-                )}
+                <th>Select</th>
                 <th style={{minWidth: 200}}>Name</th>
                 <th style={{minWidth: 400}}>Description</th>
                 <th className="text-nowrap" style={{minWidth: 145}}>Created At</th>
-                <th className="text-nowrap" style={{minWidth: 145}}>{(showDeleted ? 'Archived At' : 'Updated At')}</th>
+                <th className="text-nowrap" style={{minWidth: 145}}>
+                  {(showDeleted ? 'Archived At' : 'Updated At')}
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -334,7 +399,6 @@ function DepartmentPage() {
                   className={selectedIds.includes(department.id) ? "table-active" : ""}
                 >
                   <th>{(currentPage - 1) * 10 + (index + 1)}</th>
-                  {!showDeleted && (
                   <td className="text-end">
                     <input
                     type="checkbox"
@@ -342,11 +406,14 @@ function DepartmentPage() {
                     onChange={() => handleSelectChange(department.id)}
                     />
                   </td>
-                  )}
                   <td className="text-secondary-emphasis">{department.name}</td>
                   <td className="text-secondary-emphasis">{department.description}</td>
                   <td className="text-secondary-emphasis">{formatDate(department.createdAt)}</td>
-                  <td className="text-secondary-emphasis">{formatDate(showDeleted ? department.deletedAt : department.updatedAt)}</td>
+                  <td className="text-secondary-emphasis">
+                    {formatDate(
+                      showDeleted ? department.deletedAt : department.updatedAt
+                    )}
+                  </td>
                   <td>
                     <ButtonGroup>
                       {!showDeleted && (
@@ -460,6 +527,14 @@ function DepartmentPage() {
         handleRestore={() => handleRestore(restoreId, selectedDepartment?.name)}
         departmentId={restoreId}
         departmentName={selectedDepartment?.name || ''}
+      />
+
+      <ConfirmRestoreModal
+        show={showConfirmRestoreSelectedModal}
+        handleClose={() => setShowConfirmRestoreSelectedModal(false)}
+        handleRestore={handleConfirmRestoreSelected}
+        isBulkRestore={true}
+        selectedIds={selectedIds}
       />
     </Container>
   );

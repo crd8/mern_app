@@ -20,7 +20,7 @@ exports.getAllDepartments = async (req, res) => {
 
 exports.getDeletedDepartments = async (req, res) => {
   try {
-    const { page = 1, pageSize = 5, search = '' } = req.query;
+    const { page = 1, pageSize = 10, search = '' } = req.query;
     const deletedDepartments = await departmentService.getDeletedDepartments({ page, pageSize, search });
     
     return res.json(deletedDepartments);
@@ -166,5 +166,21 @@ exports.restoreDepartment = async (req, res) => {
   } catch (error) {
     console.error('Error in restoreDepartment: ', error);
     res.status(500).json({ error: error.message });
+  }
+};
+
+exports.batchRestoreDepartments = async (req, res) => {
+  const { ids } = req.body;
+
+  try {
+    if (!ids || ids.length === 0) {
+      return res.status(400).json({ message: 'Department IDs are required' });
+    }
+
+    const result = await departmentService.batchRestoreDepartments(ids);
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error('Error restoring departments: ', error.message);
+    return res.status(error.statusCode || 500).json({ message: error.message });
   }
 };

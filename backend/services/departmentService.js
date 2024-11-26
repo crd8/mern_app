@@ -283,3 +283,37 @@ exports.restoreDepartment = async (id) => {
     }
   }
 };
+
+exports.batchRestoreDepartments = async (ids) => {
+  if (!Array.isArray(ids) || ids.length === 0) {
+    throw {
+      message: 'Departments IDs must be an array and cannot be empty',
+      statusCode: 400
+    };
+  }
+
+  try {
+    const restored = await Department.restore({
+      where: {
+        id: ids,
+        deletedAt: { [Op.not]: null }
+      }
+    });
+
+    if (restored === 0) {
+      throw {
+        message: 'No departments were restored - possibly not found or not deleted',
+        statusCode: 404
+      };
+    }
+
+    return { message: 'Selected departments restored successfully' };
+  } catch (error) {
+    if (error.statusCode) {
+      throw error;
+    } else {
+      logger.error('Error restoring selected departments: ', { message: error.message, stack: error.stack });
+      throw { message: 'Error restoring selected departments: ' + error.message, statusCode: 500 };
+    }
+  }
+};
