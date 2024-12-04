@@ -219,24 +219,29 @@ exports.batchDeleteDepartments = async (ids) => {
   }
 
   try {
-    const deleted = await Department.destroy({
-      where: {
-        id: ids,
-        deletedAt: null
-      }
+    const existingDepartments = await Department.findAll({
+      where: { id: ids, deletedAt: null }
     });
 
-    if (deleted === 0) {
-      throw { message: 'No departments were deleted - possibly already deleted or not found.', statusCode: 404 };
+    const foundIds = existingDepartments.map(department => department.id);
+    const missingIds = ids.filter(id => !foundIds.includes(id));
+
+    if (foundIds.length > 0) {
+      // logger.info('Deleting departments', { foundIds, missingIds }); <-- untuk cek ID mana yang ditemukan dan tidak
+      await Department.destroy({ where: { id: foundIds, deletedAt: null } });
     }
-    
-    return { message: 'Selected departments deleted successfully' };
+
+    return {
+      message: 'Selected departments deleted successfully',
+      deletedIds: foundIds,
+      missingIds
+    };
   } catch (error) {
     if (error.statusCode) {
       throw error;
     } else {
       logger.error('Error deleting selected departments: ', { message: error.message, stack: error.stack });
-      throw { message: 'Error deleting selected departments: '+ error.message, statusCode: 500 };
+      throw { message: 'Error deleting selected departments: ' + error.message, statusCode: 500 };
     }
   }
 };

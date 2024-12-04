@@ -121,10 +121,10 @@ exports.batchDeleteDepartments = async (req, res) => {
     }
 
     const result = await departmentService.batchDeleteDepartments(ids);
-    return res.status(200).json(result);
+    res.status(200).json(result);
   } catch (error) {
-    console.error('Error deleting departments: ', error.message);
-    return res.status(error.statusCode || 500).json({ message: error.message });
+    const statusCode = error.statusCode || 500;
+    res.status(statusCode).json({ message: error.message });
   }
 };
 

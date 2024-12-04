@@ -31,6 +31,8 @@ function DepartmentPage() {
   const [showDeleted, setShowDeleted] = useState(false);
   const [selectedIds, setSelectedIds] = useState([]);
 
+  const selectedNames = departments.filter(department => selectedIds.includes(department.id)).map(department => department.name);
+
   const fetchDepartments = useCallback(async () => {
     setLoading(true);
     try {
@@ -140,13 +142,28 @@ function DepartmentPage() {
     setLoading(true);
   
     try {
-      await axios.post('http://localhost:5000/api/departments/batch-delete', { ids: selectedIds });
+      const response = await axios.post('http://localhost:5000/api/departments/batch-delete', { ids: selectedIds });
+      const { deletedIds, missingIds } = response.data;
+  
+      if (missingIds.length > 0) {
+        setNotification({
+          type: 'warning',
+          message: `Deleted: ${deletedIds.length} department(s). Missing or already deleted: ${missingIds.join(', ')}.`
+        });
+      } else {
+        setNotification({
+          type: 'success',
+          message: `Deleted: ${deletedIds.length} department(s) successfully!`
+        });
+      }
+  
       fetchDepartments();
-      setNotification({ type: 'success', message: 'Selected departments deleted successfully!' });
       setSelectedIds([]);
     } catch (error) {
       console.error('Error deleting selected departments:', error.message);
-      setNotification({ type: 'error', message: `Failed to delete selected departments: ${error.message}` });
+  
+      const errorMessage = error.response?.data?.message || 'An unexpected error occurred';
+      setNotification({ type: 'error', message: `Failed to delete selected departments: ${errorMessage}` });
     } finally {
       setLoading(false);
     }
@@ -511,6 +528,7 @@ function DepartmentPage() {
         handleDelete={handleConfirmDeleteSelected}
         isBulkDelete={true}
         selectedIds={selectedIds}
+        selectedNames={selectedNames}
       />
 
       <ConfirmDestroyModal

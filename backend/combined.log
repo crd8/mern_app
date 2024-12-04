@@ -1,16 +1,2 @@
-{"level":"error","message":"Error deleting departments: ","timestamp":"2024-11-19T03:24:38.444Z"}
-{"level":"error","message":"Error deleting departments: ","timestamp":"2024-11-19T03:24:52.373Z"}
-{"level":"error","message":"Error deleting departments: ","timestamp":"2024-11-19T03:24:53.135Z"}
-{"level":"error","message":"Error deleting departments: ","timestamp":"2024-11-19T03:26:01.353Z"}
-{"level":"error","message":"Error deleting departments: ","timestamp":"2024-11-19T03:32:23.201Z"}
-{"level":"error","message":"Error deleting departments: ","timestamp":"2024-11-19T03:32:30.310Z"}
-{"level":"error","message":"Error deleting departments: ","timestamp":"2024-11-19T03:32:34.452Z"}
-{"level":"error","message":"Error deleting departments: ","timestamp":"2024-11-19T03:42:16.672Z"}
-{"level":"error","message":"Error deleting departments: ","timestamp":"2024-11-19T03:42:39.228Z"}
-{"level":"error","message":"Error deleting departments: ","timestamp":"2024-11-19T03:45:58.844Z"}
-{"level":"error","message":"Error deleting departments: ","timestamp":"2024-11-19T03:47:09.586Z"}
-{"level":"error","message":"Error deleting departments: ","timestamp":"2024-11-19T03:47:10.167Z"}
-{"level":"error","message":"Error deleting departments: ","timestamp":"2024-11-19T03:47:10.662Z"}
-{"level":"error","message":"Error deleting departments: ","timestamp":"2024-11-19T03:47:11.085Z"}
-{"level":"error","message":"Error deleting departments: ","timestamp":"2024-11-19T03:47:11.485Z"}
-{"level":"error","message":"Error deleting departments: ","timestamp":"2024-11-19T03:47:43.295Z"}
+{"foundIds":["b434e301-b575-4ba4-86e5-6b571d4bafca","bd04df2a-a6de-497c-89d9-d5c184517a33","d7a60ae9-3347-48e9-9e53-3d3abab586b1","e1f71138-5c09-422a-abce-de36ffa142ea"],"level":"info","message":"Deleting departments","missingIds":[],"timestamp":"2024-12-04T02:24:12.655Z"}
+{"foundIds":["a709777e-7661-4923-9c45-57c1cc2bb4d6","b434e301-b575-4ba4-86e5-6b571d4bafca","bd04df2a-a6de-497c-89d9-d5c184517a33","d7a60ae9-3347-48e9-9e53-3d3abab586b1","e1f71138-5c09-422a-abce-de36ffa142ea"],"level":"info","message":"Deleting departments","missingIds":[],"timestamp":"2024-12-04T02:26:13.717Z"}

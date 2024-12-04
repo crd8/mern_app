@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import PropTypes from "prop-types";
 import { Modal, Button, Spinner, Alert } from "react-bootstrap";
 
-const ConfirmDeleteModal = ({ show, handleClose, handleDelete, departmentId, departmentName, isBulkDelete = false, selectedIds = [] }) => {
+const ConfirmDeleteModal = ({ show, handleClose, handleDelete, departmentId, departmentName, isBulkDelete = false, selectedIds = [], selectedNames = [] }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -38,9 +38,13 @@ const ConfirmDeleteModal = ({ show, handleClose, handleDelete, departmentId, dep
         <Modal.Title>Confirm Delete</Modal.Title>
       </Modal.Header>
       <Modal.Body>
-      {error && <Alert variant="danger">{error}</Alert>}
+        {error && <Alert variant="danger">{error}</Alert>}
         {isBulkDelete ? (
-          <p>Are you sure you want to archive <strong>all selected departements</strong>? <br/> The data can still be restored in the future if needed.</p>
+          <div>
+            <p>Are you sure you want to archive <strong>all selected departments</strong>?</p>
+            <p><strong>Selected departments:</strong> {selectedNames.join(", ")}</p>
+            <small className="text-muted">The data can still be restored in the future if needed.</small>
+          </div>
         ) : (
           <p>Are you sure you want to archive this department "<strong className="text-decoration-underline">{departmentName}</strong>"? <br/> <small className="text-muted">The data can still be restored in the future if needed.</small></p>
         )}
@@ -62,7 +66,6 @@ const ConfirmDeleteModal = ({ show, handleClose, handleDelete, departmentId, dep
   );
 };
 
-// Validasi tipe properti yang diterima komponen
 ConfirmDeleteModal.propTypes = {
   show: PropTypes.bool.isRequired,
   handleClose: PropTypes.func.isRequired,
@@ -71,6 +74,7 @@ ConfirmDeleteModal.propTypes = {
   departmentName: PropTypes.string,
   isBulkDelete: PropTypes.bool,
   selectedIds: PropTypes.arrayOf(PropTypes.string),
+  selectedNames: PropTypes.arrayOf(PropTypes.string),
 };
 
 export default ConfirmDeleteModal;

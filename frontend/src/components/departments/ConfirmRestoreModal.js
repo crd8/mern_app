@@ -52,13 +52,12 @@ const ConfirmRestoreModal = ({ show, handleClose, handleRestore, departmentId, d
   );
 };
 
-// Validasi tipe properti yang diterima komponen
 ConfirmRestoreModal.propTypes = {
   show: PropTypes.bool.isRequired,
   handleClose: PropTypes.func.isRequired,
   handleRestore: PropTypes.func.isRequired,
-  departmentId: PropTypes.string.isRequired,
-  departmentName: PropTypes.string.isRequired,
+  departmentId: PropTypes.string,
+  departmentName: PropTypes.string,
 };
 
 export default ConfirmRestoreModal;
