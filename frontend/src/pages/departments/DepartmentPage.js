@@ -1,20 +1,22 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import axios from 'axios';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import { Table, Button, ToggleButtonGroup, ToggleButton, ButtonGroup, Container, Toast, Pagination, Form, Spinner, OverlayTrigger, Tooltip } from 'react-bootstrap';
-import { BsPencilSquare, BsTrash, BsArchive, BsArrowRepeat, BsDatabaseCheck, BsDatabaseX } from "react-icons/bs";
+import { Table, Button, ToggleButtonGroup, ToggleButton, ButtonGroup, Container, Toast, Pagination, Form, Spinner, OverlayTrigger, Tooltip, Card } from 'react-bootstrap';
+import { BsPencilSquare, BsTrash, BsArchive, BsArrowRepeat } from "react-icons/bs";
 import { format } from 'date-fns';
 import { enUS } from 'date-fns/locale';
 import DepartmentModal from "../../components/departments/DepartmentModal";
 import ConfirmDeleteModal from "../../components/departments/ConfirmDeleteModal";
 import ConfirmDestroyModal from "../../components/departments/ConfirmDestroyModal";
 import ConfirmRestoreModal from "../../components/departments/ConfirmRestoreModal";
+import useDebounce from "../../hooks/useDebounce";
 
 function DepartmentPage() {
   const [departments, setDepartments] = useState([]);
   const [totalPages, setTotalPages] = useState(1);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
   const searchInputRef = useRef(null);
   const [showModal, setShowModal] = useState(false);
   const [selectedDepartment, setSelectedDepartment] = useState(null);
@@ -40,7 +42,7 @@ function DepartmentPage() {
       const response = await axios.get(`http://localhost:5000/api/departments${endpoint}`, {
         params: {
           page: currentPage,
-          search: searchTerm,
+          search: debouncedSearchTerm,
         }
       });
       setDepartments(response.data.data);
@@ -54,11 +56,11 @@ function DepartmentPage() {
     } finally {
       setLoading(false);
     }
-  }, [currentPage, searchTerm, showDeleted]);
+  }, [currentPage, debouncedSearchTerm, showDeleted]);
   
   useEffect(() => {
     fetchDepartments();
-  }, [fetchDepartments, currentPage, showDeleted]);
+  }, [fetchDepartments, currentPage, showDeleted, debouncedSearchTerm]);
 
   const handleSave = async (department) => {
     setLoading(true);
@@ -305,255 +307,263 @@ function DepartmentPage() {
 
   return (
     <Container className="pt-4">
-      {notification && (
-        <Toast
-          onClose={() => setNotification(null)}
-          autohide
-          delay={8000}
-          show={!!notification}
-          style={{
-            position: 'fixed',
-            top: 20,
-            right: 20,
-            minWidth: '200px',
-            zIndex: 1050
-          }}
-        >
-          <Toast.Header>
-            <strong className="me-auto">
-              {notification.type === 'success' 
-                ? 'Success Notification' 
-                : 'Error Notification'}
-            </strong>
-          </Toast.Header>
-          <Toast.Body>{notification.message}</Toast.Body>
-        </Toast>
-      )}
-      {loading && <Spinner animation="border" />}
-      {!loading && (
-        <>
-          <div className="d-flex justify-content-between">
-            <div>
-              {!showDeleted && (
-                <Button variant="primary" onClick={handleAdd}>Add</Button>
-              )}
-              {selectedIds.length > 0 && !showDeleted && (
-                <Button className="ms-1" variant="warning" onClick={handleDeleteSelected}>Archive</Button>
-              )}
-              {selectedIds.length > 0 && showDeleted && (
-                <Button
-                  className="ms-1"
-                  variant="success"
-                  onClick={handleRestoreSelected}
-                >
-                  Restore Selected
-                </Button>
-              )}
-            </div>
-            <div>
-              <ToggleButtonGroup
-                type="radio"
-                name="status-options"
-                value={showDeleted ? 'inactive' : 'active'}
-                onChange={(val) => setShowDeleted(val === 'inactive')}
-                className="mb-2"
-              >
-                <ToggleButton
-                  id="radio-active"
+      <Card className="p-3">
+        <Card.Body>
+          {notification && (
+          <Toast
+            onClose={() => setNotification(null)}
+            autohide
+            delay={8000}
+            show={!!notification}
+            style={{
+              position: 'fixed',
+              top: 20,
+              right: 20,
+              minWidth: '200px',
+              zIndex: 1050
+            }}
+          >
+            <Toast.Header>
+              <strong className="me-auto">
+                {notification.type === 'success' 
+                  ? 'Success Notification' 
+                  : 'Error Notification'}
+              </strong>
+            </Toast.Header>
+            <Toast.Body>{notification.message}</Toast.Body>
+          </Toast>
+          )}
+          {loading && <Spinner animation="border" />}
+          {!loading && (
+          <>
+            <div className="d-flex justify-content-between mb-3">
+              <div>
+                {!showDeleted && (
+                  <Button variant="primary" onClick={handleAdd}>Add</Button>
+                )}
+                {selectedIds.length > 0 && !showDeleted && (
+                  <Button className="ms-1" variant="warning" onClick={handleDeleteSelected}>Archive</Button>
+                )}
+                {selectedIds.length > 0 && showDeleted && (
+                  <Button
+                    className="ms-1"
+                    variant="success"
+                    onClick={handleRestoreSelected}
+                  >
+                    Restore Selected
+                  </Button>
+                )}
+              </div>
+              <div>
+                <ToggleButtonGroup
                   type="radio"
-                  variant="outline-primary"
-                  value="active"
-                  checked={!showDeleted}
+                  name="status-options"
+                  value={showDeleted ? 'inactive' : 'active'}
+                  onChange={(val) => setShowDeleted(val === 'inactive')}
+                  className="mb-2"
                 >
-                  <BsDatabaseCheck size={22} />
-                </ToggleButton>
+                  <ToggleButton
+                    id="radio-active"
+                    type="radio"
+                    variant="secondary"
+                    size="sm"
+                    className="fw-bold text-uppercase"
+                    value="active"
+                    checked={!showDeleted}
+                  >
+                    <small>Active</small>
+                  </ToggleButton>
 
-                <ToggleButton
-                  id="radio-inactive"
-                  type="radio"
-                  variant="outline-secondary"
-                  value="inactive"
-                  checked={showDeleted}
-                >
-                  <BsDatabaseX size={22} />
-                </ToggleButton>
-              </ToggleButtonGroup>
+                  <ToggleButton
+                    id="radio-inactive"
+                    type="radio"
+                    variant="secondary"
+                    size="sm"
+                    className="fw-bold text-uppercase"
+                    value="inactive"
+                    checked={showDeleted}
+                  >
+                    <small>Inactive</small>
+                  </ToggleButton>
+                </ToggleButtonGroup>
+              </div>
             </div>
-          </div>
-          <div className="d-md-flex justify-content-between align-items-end">
-            <div className="col-md-7">
-              <h4 className="fw-semibold">{(showDeleted ? 'List of archive departments' : 'List of active departments')}</h4>
-              <p className="text-muted">List of currently active departments, displaying all departments that are still active in the system. You can also view departments that have been archived or deactivated by switching to archive mode.</p>
+            <div className="d-md-flex justify-content-between align-items-end mb-3">
+              <div className="col-md-7">
+                <h4 className="fw-semibold text-primary-emphasis">{(showDeleted ? 'List of archive departments' : 'List of active departments')}</h4>
+                <p className="text-muted">List of currently active departments, displaying all departments that are still active in the system. You can also view departments that have been archived or deactivated by switching to archive mode.</p>
+              </div>
+              <div className="col-md-4">
+                <Form.Control
+                  type="text"
+                  placeholder="Search department..."
+                  value={searchTerm}
+                  onChange={handleSearchChange}
+                  className="mb-3"
+                  ref={searchInputRef}
+                />
+              </div>
             </div>
-            <div className="col-md-4">
-              <Form.Control
-                type="text"
-                placeholder="Search department..."
-                value={searchTerm}
-                onChange={handleSearchChange}
-                className="mb-3"
-                ref={searchInputRef}
-              />
-            </div>
-          </div>
-          <Table responsive>
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Select</th>
-                <th style={{minWidth: 200}}>Name</th>
-                <th style={{minWidth: 400}}>Description</th>
-                <th className="text-nowrap" style={{minWidth: 145}}>Created At</th>
-                <th className="text-nowrap" style={{minWidth: 145}}>
-                  {(showDeleted ? 'Archived At' : 'Updated At')}
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {departments.map((department, index) => (
-                <tr
-                  key={department.id}
-                  className={selectedIds.includes(department.id) ? "table-active" : ""}
-                >
-                  <th>{(currentPage - 1) * 10 + (index + 1)}</th>
-                  <td className="text-end">
-                    <input
-                    type="checkbox"
-                    checked={selectedIds.includes(department.id)}
-                    onChange={() => handleSelectChange(department.id)}
-                    />
-                  </td>
-                  <td className="text-secondary-emphasis">{department.name}</td>
-                  <td className="text-secondary-emphasis">{department.description}</td>
-                  <td className="text-secondary-emphasis">{formatDate(department.createdAt)}</td>
-                  <td className="text-secondary-emphasis">
-                    {formatDate(
-                      showDeleted ? department.deletedAt : department.updatedAt
-                    )}
-                  </td>
-                  <td>
-                    <ButtonGroup>
-                      {!showDeleted && (
-                        <>
-                          <OverlayTrigger
-                            placement="top"
-                            overlay={<Tooltip>Edit</Tooltip>}
-                          >
-                            <Button
-                              variant="link"
-                              onClick={() => handleEdit(department)}
-                            >
-                              <BsPencilSquare />
-                            </Button>
-                          </OverlayTrigger>
-                          <OverlayTrigger
-                            placement="top"
-                            overlay={<Tooltip>Archive</Tooltip>}
-                          >
-                            <Button
-                              variant="link"
-                              onClick={() => showDeleteConfirmModal(department.id, department.name)}
-                            >
-                              <BsArchive />
-                            </Button>
-                          </OverlayTrigger>
-                        </>
-                      )}
-
-                      {showDeleted && (
-                        <>
-                          <OverlayTrigger
-                            placement="top"
-                            overlay={<Tooltip>Restore</Tooltip>}
-                          >
-                            <Button
-                              variant="link"
-                              onClick={() => showRestoreConfirmModal(department.id, department.name)}
-                            >
-                              <BsArrowRepeat />
-                            </Button> 
-                          </OverlayTrigger>
-                          <OverlayTrigger
-                            placement="top"
-                            overlay={<Tooltip>Destroy</Tooltip>}
-                          >
-                            <Button
-                              variant="link"
-                              onClick={() => showDestroyConfirmModal(department.id, department.name)}
-                            >
-                              <BsTrash />
-                            </Button>
-                          </OverlayTrigger>
-                        </>
-                      )}
-                    </ButtonGroup>
-                  </td>
+            <Table responsive>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Select</th>
+                  <th style={{minWidth: 200}}>Name</th>
+                  <th style={{minWidth: 400}}>Description</th>
+                  <th className="text-nowrap" style={{minWidth: 145}}>Created At</th>
+                  <th className="text-nowrap" style={{minWidth: 145}}>
+                    {(showDeleted ? 'Archived At' : 'Updated At')}
+                  </th>
                 </tr>
+              </thead>
+              <tbody>
+                {departments.map((department, index) => (
+                  <tr
+                    key={department.id}
+                    className={selectedIds.includes(department.id) ? "table-active" : ""}
+                  >
+                    <th>{(currentPage - 1) * 10 + (index + 1)}</th>
+                    <td className="text-end">
+                      <input
+                      type="checkbox"
+                      checked={selectedIds.includes(department.id)}
+                      onChange={() => handleSelectChange(department.id)}
+                      />
+                    </td>
+                    <td className="text-secondary-emphasis">{department.name}</td>
+                    <td className="text-secondary-emphasis">{department.description}</td>
+                    <td className="text-secondary-emphasis">{formatDate(department.createdAt)}</td>
+                    <td className="text-secondary-emphasis">
+                      {formatDate(
+                        showDeleted ? department.deletedAt : department.updatedAt
+                      )}
+                    </td>
+                    <td>
+                      <ButtonGroup>
+                        {!showDeleted && (
+                          <>
+                            <OverlayTrigger
+                              placement="top"
+                              overlay={<Tooltip>Edit</Tooltip>}
+                            >
+                              <Button
+                                variant="link"
+                                onClick={() => handleEdit(department)}
+                              >
+                                <BsPencilSquare />
+                              </Button>
+                            </OverlayTrigger>
+                            <OverlayTrigger
+                              placement="top"
+                              overlay={<Tooltip>Archive</Tooltip>}
+                            >
+                              <Button
+                                variant="link"
+                                onClick={() => showDeleteConfirmModal(department.id, department.name)}
+                              >
+                                <BsArchive />
+                              </Button>
+                            </OverlayTrigger>
+                          </>
+                        )}
+
+                        {showDeleted && (
+                          <>
+                            <OverlayTrigger
+                              placement="top"
+                              overlay={<Tooltip>Restore</Tooltip>}
+                            >
+                              <Button
+                                variant="link"
+                                onClick={() => showRestoreConfirmModal(department.id, department.name)}
+                              >
+                                <BsArrowRepeat />
+                              </Button> 
+                            </OverlayTrigger>
+                            <OverlayTrigger
+                              placement="top"
+                              overlay={<Tooltip>Destroy</Tooltip>}
+                            >
+                              <Button
+                                variant="link"
+                                onClick={() => showDestroyConfirmModal(department.id, department.name)}
+                              >
+                                <BsTrash />
+                              </Button>
+                            </OverlayTrigger>
+                          </>
+                        )}
+                      </ButtonGroup>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
+            
+            <Pagination className="mt-3">
+              {Array.from({ length: totalPages }, (_, i) => (
+                <Pagination.Item
+                  key={i + 1}
+                  active={i + 1 === currentPage}
+                  onClick={() => handlePageChange(i + 1)}
+                >
+                  {i + 1}
+                </Pagination.Item>
               ))}
-            </tbody>
-          </Table>
-          
-          <Pagination className="mt-3">
-            {Array.from({ length: totalPages }, (_, i) => (
-              <Pagination.Item
-                key={i + 1}
-                active={i + 1 === currentPage}
-                onClick={() => handlePageChange(i + 1)}
-              >
-                {i + 1}
-              </Pagination.Item>
-            ))}
-          </Pagination>
-        </>
-      )}
+            </Pagination>
+          </>
+          )}
 
-      <DepartmentModal
-        show={showModal}
-        handleClose={() => setShowModal(false)}
-        handleSave={handleSave}
-        department={selectedDepartment}
-      />
+          <DepartmentModal
+            show={showModal}
+            handleClose={() => setShowModal(false)}
+            handleSave={handleSave}
+            department={selectedDepartment}
+          />
 
-      <ConfirmDeleteModal
-        show={showConfirmDeleteModal}
-        handleClose={() => setShowConfirmDeleteModal(false)}
-        handleDelete={() => handleDelete(deleteId, selectedDepartment?.name)}
-        departmentId={deleteId}
-        departmentName={selectedDepartment?.name || ''}
-      />
+          <ConfirmDeleteModal
+            show={showConfirmDeleteModal}
+            handleClose={() => setShowConfirmDeleteModal(false)}
+            handleDelete={() => handleDelete(deleteId, selectedDepartment?.name)}
+            departmentId={deleteId}
+            departmentName={selectedDepartment?.name || ''}
+          />
 
-      <ConfirmDeleteModal
-        show={showConfirmDeleteSelectedModal}
-        handleClose={() => setShowConfirmDeleteSelectedModal(false)}
-        handleDelete={handleConfirmDeleteSelected}
-        isBulkDelete={true}
-        selectedIds={selectedIds}
-        selectedNames={selectedNames}
-      />
+          <ConfirmDeleteModal
+            show={showConfirmDeleteSelectedModal}
+            handleClose={() => setShowConfirmDeleteSelectedModal(false)}
+            handleDelete={handleConfirmDeleteSelected}
+            isBulkDelete={true}
+            selectedIds={selectedIds}
+            selectedNames={selectedNames}
+          />
 
-      <ConfirmDestroyModal
-        show={showConfirmDestroyModal}
-        handleClose={() => setShowConfirmDestroyModal(false)}
-        handleDestroy={() => handleDestroy(destroyId, selectedDepartment?.name)}
-        departmentId={destroyId}
-        departmentName={selectedDepartment?.name || ''}
-      />
+          <ConfirmDestroyModal
+            show={showConfirmDestroyModal}
+            handleClose={() => setShowConfirmDestroyModal(false)}
+            handleDestroy={() => handleDestroy(destroyId, selectedDepartment?.name)}
+            departmentId={destroyId}
+            departmentName={selectedDepartment?.name || ''}
+          />
 
-      <ConfirmRestoreModal
-        show={showConfirmRestoreModal}
-        handleClose={() => setShowConfirmRestoreModal(false)}
-        handleRestore={() => handleRestore(restoreId, selectedDepartment?.name)}
-        departmentId={restoreId}
-        departmentName={selectedDepartment?.name || ''}
-      />
+          <ConfirmRestoreModal
+            show={showConfirmRestoreModal}
+            handleClose={() => setShowConfirmRestoreModal(false)}
+            handleRestore={() => handleRestore(restoreId, selectedDepartment?.name)}
+            departmentId={restoreId}
+            departmentName={selectedDepartment?.name || ''}
+          />
 
-      <ConfirmRestoreModal
-        show={showConfirmRestoreSelectedModal}
-        handleClose={() => setShowConfirmRestoreSelectedModal(false)}
-        handleRestore={handleConfirmRestoreSelected}
-        isBulkRestore={true}
-        selectedIds={selectedIds}
-      />
+          <ConfirmRestoreModal
+            show={showConfirmRestoreSelectedModal}
+            handleClose={() => setShowConfirmRestoreSelectedModal(false)}
+            handleRestore={handleConfirmRestoreSelected}
+            isBulkRestore={true}
+            selectedIds={selectedIds}
+          />
+        </Card.Body>
+      </Card>
     </Container>
   );
 }
