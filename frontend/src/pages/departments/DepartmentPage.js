@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import axios from 'axios';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { Table, Button, ToggleButtonGroup, ToggleButton, ButtonGroup, Container, Toast, Pagination, Form, Spinner, OverlayTrigger, Tooltip, Card } from 'react-bootstrap';
-import { BsPencilSquare, BsTrash, BsArchive, BsArrowRepeat } from "react-icons/bs";
+import { BsPencilSquare, BsTrash, BsArchive, BsArrowRepeat, BsFileEarmarkExcelFill } from "react-icons/bs";
 import { format } from 'date-fns';
 import { enUS } from 'date-fns/locale';
 import DepartmentModal from "../../components/departments/DepartmentModal";
@@ -305,6 +305,26 @@ function DepartmentPage() {
     return format(date, "dd MMMM yyyy, HH:mm:ss", { locale: enUS });
   };
 
+  const handleDownload = async () => {
+    try {
+      const response = await axios.get('http://localhost:5000/api/departments/download/excel?paranoid=false&all=true', {
+        responseType: 'blob',
+      });
+
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'departments.xlsx');
+      document.body.appendChild(link);
+      link.click();
+
+      link.parentNode.removeChild(link);
+    } catch (error) {
+      console.error('Error downloading the Excel file:', error);
+      alert('Gagal mengunduh file Excel.');
+    }
+  };
+
   return (
     <Container className="pt-4">
       <Card className="p-3">
@@ -339,7 +359,12 @@ function DepartmentPage() {
             <div className="d-flex justify-content-between mb-3">
               <div>
                 {!showDeleted && (
-                  <Button variant="primary" onClick={handleAdd}>Add</Button>
+                  <div>
+                    <Button className="me-2" variant="primary" onClick={handleAdd}>Add</Button>
+                    <Button variant="success" onClick={handleDownload}>
+                      <BsFileEarmarkExcelFill/>
+                    </Button>
+                  </div>
                 )}
                 {selectedIds.length > 0 && !showDeleted && (
                   <Button className="ms-1" variant="warning" onClick={handleDeleteSelected}>Archive</Button>

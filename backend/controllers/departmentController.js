@@ -1,4 +1,5 @@
 const departmentService = require('../services/departmentService');
+const excelService = require('../services/excelService');
 
 exports.getAllDepartments = async (req, res) => {
   try {
@@ -182,5 +183,31 @@ exports.batchRestoreDepartments = async (req, res) => {
   } catch (error) {
     console.error('Error restoring departments: ', error.message);
     return res.status(error.statusCode || 500).json({ message: error.message });
+  }
+};
+
+exports.downloadDepartmentsExcel = async (req, res) => {
+  try {
+    const { paranoid = 'true' } = req.query;
+    const isParanoid = paranoid === 'false' ? false : true;
+
+    const departments = await departmentService.getAllDepartments({ paranoid: isParanoid });
+    const departmentData = departments.data.map(dept => ({
+      ID: dept.id,
+      Name: dept.name,
+      Description: dept.description,
+      CreatedAt: dept.createdAt,
+      UpdatedAt: dept.updatedAt,
+      DeletedAt: dept.deletedAt || null,
+    }));
+
+    const excelBuffer = excelService.createExcelFile(departmentData);
+
+    res.setHeader('Content-Disposition', 'attachment; filename="departments.xlsx"');
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    return res.send(excelBuffer);
+  } catch (error) {
+    console.error('Error in downloadDepartmentsExcel: ', error);
+    return res.status(error.statusCode || 500).json({ error: error.message });
   }
 };
