@@ -188,10 +188,14 @@ exports.batchRestoreDepartments = async (req, res) => {
 
 exports.downloadDepartmentsExcel = async (req, res) => {
   try {
-    const { paranoid = 'true' } = req.query;
+    const { paranoid = 'true', startDate, endDate } = req.query;
     const isParanoid = paranoid === 'false' ? false : true;
 
-    const departments = await departmentService.getAllDepartments({ paranoid: isParanoid });
+    if (!startDate || !endDate) {
+      return res.status(400).json({ error: 'Start and end date are required' });
+    }
+
+    const departments = await departmentService.getAllDepartments({ paranoid: isParanoid, startDate, endDate });
     const departmentData = departments.data.map(dept => ({
       ID: dept.id,
       Name: dept.name,

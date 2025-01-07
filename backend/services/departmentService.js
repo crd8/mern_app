@@ -12,19 +12,26 @@ const validatePaginationParams = (page, pageSize) => {
   return { pageNum, size };
 };
 
-exports.getAllDepartments = async ({ paranoid }) => {
+exports.getAllDepartments = async ({ paranoid, startDate, endDate }) => {
   try {
+    const whereCondition = {};
+    if (startDate && endDate) {
+      whereCondition.createdAt = {
+        [Op.between]: [new Date(startDate), new Date(endDate)],
+      };
+    }
+
     const departments = await Department.findAll({
+      where: whereCondition,
       paranoid: paranoid,
     });
-    return {
-      data: departments
-    };
+
+    return { data: departments };
   } catch (error) {
     logger.error('Error retrieving all departments: ', error.message);
     throw { message: 'Error retrieving all departments', statusCode: 500 };
   }
-}
+};
 
 exports.getDepartments = async ({ page, pageSize, search, paranoid }) => {
   const { pageNum, size } = validatePaginationParams(page, pageSize);

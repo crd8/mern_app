@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import axios from 'axios';
+import DatePicker from "react-datepicker";
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { Table, Button, ToggleButtonGroup, ToggleButton, ButtonGroup, Container, Toast, Pagination, Form, Spinner, OverlayTrigger, Tooltip, Card } from 'react-bootstrap';
+import 'react-datepicker/dist/react-datepicker.css';
 import { BsPencilSquare, BsTrash, BsArchive, BsArrowRepeat, BsFileEarmarkExcelFill } from "react-icons/bs";
 import { format } from 'date-fns';
 import { enUS } from 'date-fns/locale';
@@ -16,8 +18,10 @@ function DepartmentPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
-  const debouncedSearchTerm = useDebounce(searchTerm, 500);
-  const searchInputRef = useRef(null);
+  // const [startDate, setStartDate] = useState(null);
+  // const [endDate, setEndDate] = useState(null);
+  const [dateRange, setDateRange] = useState([null, null]);
+  const [startDate, endDate] = dateRange;
   const [showModal, setShowModal] = useState(false);
   const [selectedDepartment, setSelectedDepartment] = useState(null);
   const [showConfirmDeleteModal, setShowConfirmDeleteModal] = useState(false);
@@ -34,11 +38,16 @@ function DepartmentPage() {
   const [selectedIds, setSelectedIds] = useState([]);
 
   const selectedNames = departments.filter(department => selectedIds.includes(department.id)).map(department => department.name);
+  const debouncedSearchTerm = useDebounce(searchTerm, 1500);
+  const searchInputRef = useRef(null);
 
   const fetchDepartments = useCallback(async () => {
     setLoading(true);
     try {
-      const endpoint = showDeleted ? '/deleted-departments' : '';
+      const endpoint = showDeleted
+        ? '/deleted-departments' 
+        : ''
+      ;
       const response = await axios.get(`http://localhost:5000/api/departments${endpoint}`, {
         params: {
           page: currentPage,
@@ -307,7 +316,15 @@ function DepartmentPage() {
 
   const handleDownload = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/departments/download/excel?paranoid=false&all=true', {
+      if (!startDate || !endDate) {
+        alert('Please select a date range to download the Excel file.');
+        return;
+      }
+
+      const formattedStartDate = startDate.toISOString().split('T')[0];
+      const formattedEndDate = endDate.toISOString().split('T')[0];
+
+      const response = await axios.get(`http://localhost:5000/api/departments/download/excel?paranoid=false&all=true&startDate=${formattedStartDate}&endDate=${formattedEndDate}`, {
         responseType: 'blob',
       });
 
@@ -317,11 +334,10 @@ function DepartmentPage() {
       link.setAttribute('download', 'departments.xlsx');
       document.body.appendChild(link);
       link.click();
-
       link.parentNode.removeChild(link);
     } catch (error) {
-      console.error('Error downloading the Excel file:', error);
-      alert('Gagal mengunduh file Excel.');
+      console.error('Error downloading the Excel file: ', error);
+      alert('Failed to downloading excel file.');
     }
   };
 
@@ -361,6 +377,18 @@ function DepartmentPage() {
                 {!showDeleted && (
                   <div>
                     <Button className="me-2" variant="primary" onClick={handleAdd}>Add</Button>
+                    <div>
+                      <label>Date Range: </label>
+                      <DatePicker
+                        showIcon 
+                        isClearable={true} 
+                        selectsRange={true} 
+                        startDate={startDate} 
+                        endDate={endDate} 
+                        onChange={(date) => setDateRange(date)}
+                        className="form-control"
+                      />
+                    </div>
                     <Button variant="success" onClick={handleDownload}>
                       <BsFileEarmarkExcelFill/>
                     </Button>
